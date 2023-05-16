@@ -1,2 +1,9 @@
-# IMU_ADQ_pck
-#################
+# connect IMUs
+1. run `roscore` first  
+2. connect LPMS-B2 thorugh bluetooth: ``rosrun openzen_sensor openzen_sensor_node __name:="imu3" _sensor_interface:="Bluetooth" _sensor_name:="00:04:3E:9B:A3:8F" imu:=/imu3``  
+connect other IMUs through cable: ``rosrun openzen_sensor openzen_sensor_node __name:="imu3" _sensor_name:="devicefile:/dev/ttyUSB0" _frame_id:="imu" imu:=/imu3``
+
+3. a shotcut way:  
+    * check if screen.rc already exists in qolo_ros/run_scripts,   
+    * if yes, run ``screen -S imu_conneciton -c /home/qolo/catkin_ws/src/qolo_ros/qolo_package/src/screen.rc`` or run ``connnect_imus`` as an alias, (assuming already put ``alias connect_imus="screen -S imu_conneciton -c /home/qolo/catkin_ws/src/qolo_ros/run_scripts/screen.rc`` into ~/.bashrc  
+

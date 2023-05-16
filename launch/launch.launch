@@ -1,0 +1,30 @@
+<launch> 
+
+  <group ns="imu1">
+
+    <node name="ig1_node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+    	    <param name="name" value="ig1_node" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:52:C4" type="str"/>
+	    <param name="imu" value="/ig1_node" type="str"/>  
+   </node> 
+ </group> 
+ 
+ <group ns="imu2">  
+    <node name="cu2node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+ 	    <param name="name" value="imu2" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:51:DC" type="str"/>
+	    <param name="imu" value="/cu2_imu" type="str"/>   
+    </node>
+</group>     
+
+<node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" output="screen"/>
+<group ns="adq">
+	<node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative.py" output="screen"/>
+	<node name="graph_ref" pkg="IMU_ADQ_pck" type="graph_references.py" output="screen"/>  
+</group> 
+
+
+</launch>
+

@@ -6,6 +6,6 @@ focus
 screen -t "imu1" bash -c "rosrun openzen_sensor openzen_sensor_node __name:="imu1" _sensor_interface:="Bluetooth" _sensor_name:="00:04:3E:6C:51:DC" _frame_id:="imu" imu:="/imu1""
 focus
 split
-screen -t "imu3" bash -c "rosrun openzen_sensor openzen_sensor_node __name:="imu3" _sensor_interface:="Bluetooth" _sensor_name:="00:04:3E:6C:52:C4" _frame_id:="imu" imu:="/imu3""
+screen -t "imu2" bash -c "rosrun openzen_sensor openzen_sensor_node __name:="imu2" _sensor_interface:="Bluetooth" _sensor_name:="00:04:3E:6C:52:C4" _frame_id:="imu" imu:="/imu2""
 focus
 layout save def

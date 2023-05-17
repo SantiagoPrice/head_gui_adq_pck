@@ -5,7 +5,11 @@
     <arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/robot_mod_vis.rviz"/>
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
-    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <rosparam param="source_list">["/imu_rel/imu2_realtive_imu1/Rstate"]</rosparam>
+      <param name="rate" value="0"/>  
+    </node>
 
    <!-- Imu 2 must be mounted on the head, Imu 1 on the body-->
   <group ns="imu1">
@@ -28,7 +32,7 @@
 </group>   
 
   <group ns="adq">
-	<node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative.py" output="screen"/>
+	<node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative_hh.py" output="screen"/>
 	<node name="graph_ref" pkg="IMU_ADQ_pck" type="graph_references.py" output="screen"/>
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config_file)"/>
   <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->

@@ -126,9 +126,9 @@ def ref_display_node():
     ########### Starting ROS Node ###########
     rospy.init_node('graph_ref_node', anonymous=True)
 
-    rospy.Timer(rospy.Duration(1), count_msg)
+    #rospy.Timer(rospy.Duration(1), count_msg)
     
-    rate = rospy.Rate(1) #  1 [Hz]
+    rate = rospy.Rate(2) #  1 [Hz]
     
     print(colored(":"*80, "green"))
     print(colored("Ready to start experiments...", "green"))
@@ -153,7 +153,6 @@ def ref_display_node():
 
         num_msg_recieved += 1
         index= not index
-        print(trig)
         if len(postures)== 0:
             if trig:
                 trig=False
@@ -169,7 +168,6 @@ def ref_display_node():
                     reference_q= postures.pop(0)
                 else:
                     reference_q= quaternion.quaternion(1,0,0,0)
-                print("algo")
                 print(reference_q)
                 reference = visulaize_imu(reference_q)
                 ref.publish(reference)

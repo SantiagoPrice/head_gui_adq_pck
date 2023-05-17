@@ -46,9 +46,9 @@ offset_imu_pose = np.quaternion(1.,0.,0.,0.)
 
 
 angles = [ "pitch" , "roll" , "yaw" , "pitch_ref" , "roll_ref" , "yaw_ref"]
-pos= [0 for i in range(6)]
-head_angle = JointState(name=angles,position=pos)
-
+pos = [0 for i in range(6)]
+#head_angle = JointState(name=angles,position=pos)
+ref_ypr = [0,0,0]
 
 ERR_TOL=np.pi/180*2
 
@@ -95,9 +95,11 @@ def callback_imu3(imu):
     # imu_eular1 = [i/math.pi*180 for i in e]
 
 def callback_ref(imu):
-    global head_angle
+    #global head_angle
+    global ref_ypr
     imu_q = np.quaternion(imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z)
-    head_angle.position[3:] = yawPitchRoll(imu_q ,ls=True)
+    #head_angle.position[3:] = yawPitchRoll(imu_q ,ls=True)
+    ref_ypr = yawPitchRoll(imu_q ,ls=True)
 
 def callback_offset(flag):
     global offset_imu_pose 
@@ -197,19 +199,13 @@ def self_relative():
     # e = tf.transformations.euler_from_quaternion((imu.orientation.x, imu.orientation.y, imu.orientation.z, imu.orientation.w))
 
 def visualize_posit(q):
-	global head_angle
-	head_angle.header.stamp = rospy.Time.now()
-	head_angle.position[:3]= yawPitchRoll(q, ls = True)
+    global angles , pos ,ref_ypr
+    head_state = JointState(name=angles,position=pos)
+    head_state.header.stamp = rospy.Time.now()
+    head_state.position[:3]= yawPitchRoll(q, ls = True)
+    head_state.position[3:]= ref_ypr
+    return head_state
 
-def visualize_yaw(q):
-    global head_angle
-    head_angle.header.stamp = rospy.Time.now()
-    poss= yawPitchRoll(q, ls = True)
-    #poss= quaternion.as_euler_angles(q)
-    #poss[1]=0
-    #poss[2]=0
-    #poss = list(poss)
-    head_angle.position[:3]=poss 
 
 # def imus_relative():
 #     global relative_imu1_q, relative_imu2_q
@@ -246,8 +242,10 @@ def imu_measure_node():
     pub_00 = rospy.Publisher('/adq/imu_rel/imu1_initial/data', Imu, queue_size=3)
     pub_11 = rospy.Publisher('/adq/imu_rel/imu2_initial/data', Imu, queue_size=3)
     pub_2 = rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/data', Imu, queue_size=3)
-
-    pub_h = rospy.Publisher('/joint_states', JointState, queue_size=1000)
+    probe= rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/x', Float32, queue_size=3)
+    probe2= rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/y', Float32, queue_size=3)
+    probe3= rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/z', Float32, queue_size=3)
+    pub_h = rospy.Publisher('/joint_states', JointState, queue_size=2000)
 
     cnt = 0
     flt_str=False
@@ -274,12 +272,19 @@ def imu_measure_node():
         """imu1_realtive = visulaize_imu(relative_imu1_q)
         imu2_realtive = visulaize_imu(relative_imu2_q)
         imu1_initial = visulaize_imu(initial_imu1)
-        imu2_initial = visulaize_imu(initial_imu2)
-        imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)"""
+        imu2_initial = visulaize_imu(initial_imu2)"""
+        imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)
 
         #visualize_posit(imu2_relative_imu1_q)
-        visualize_posit(imu2_relative_imu1_q)
+        head_angle = visualize_posit(imu2_relative_imu1_q)
+        print(head_angle.position)
 
+        #nancond= not np.isnan(np.array(head_angle.position)).any()
+        #zerocond = not (np.array(head_angle.position) < 0.5).all()
+
+        pub_h.publish(head_angle)
+
+        """
         avg_disp= (np.array(head_angle.position[:3])-prev_orient).mean() 
 
         if avg_disp < ERR_TOL:
@@ -292,6 +297,7 @@ def imu_measure_node():
             else:           pb_flag=True
 
         if pb_flag:
+
             print(yawPitchRoll(relative_imu1_q))
             #print(head_angle)
             pub_h.publish(head_angle)
@@ -300,14 +306,16 @@ def imu_measure_node():
             print("Noice was detected {}".format(errs))
             errs+=1
         pb_flag=True
-
-        
-
+        """
+        #probe.publish(yawPitchRoll(imu2_relative_imu1_q, ls = True)[0])
+        probe.publish(head_angle.position[0])
+        probe2.publish(head_angle.position[1])
+        probe3.publish(head_angle.position[2])
         """pub_0.publish(imu1_realtive)
         pub_1.publish(imu2_realtive)
         pub_00.publish(imu1_initial)
-        pub_11.publish(imu2_initial)
-        pub_2.publish(imu2_realtive_imu1)"""
+        pub_11.publish(imu2_initial)"""
+        pub_2.publish(imu2_realtive_imu1)
         
 
         rate.sleep()

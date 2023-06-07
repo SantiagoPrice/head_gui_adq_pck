@@ -50,7 +50,8 @@ def self_check():
     IMU2_q = []
     # while imu1_q == np.quaternion(0.,0.,0.,0.) or imu2_q == np.quaternion(0.,0.,0.,0.):
     while imu2_q == np.quaternion(0.,0.,0.,0.):
-        print('wait for imu')
+        pass
+        #print('wait for imu')
 
     print('pre check OK')
 
@@ -196,11 +197,11 @@ def imu_measure_node():
     rospy.Subscriber("/imu2/imu/data", Imu, callback_imu2, queue_size=1) # imu2
     # rospy.Subscriber("/imu3/data", Imu, callback_imu3, queue_size=1) # imu2
 
-    pub_0 = rospy.Publisher('/adq/imu_rel/imu1_realtive/data', Imu, queue_size=3)
-    pub_1 = rospy.Publisher('/adq/imu_rel/imu2_realtive/data', Imu, queue_size=3)
-    pub_00 = rospy.Publisher('/adq/imu_rel/imu1_initial/data', Imu, queue_size=3)
-    pub_11 = rospy.Publisher('/adq/imu_rel/imu2_initial/data', Imu, queue_size=3)
-    pub_2 = rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/data', Imu, queue_size=3)
+    pub_0 = rospy.Publisher('/imu_rel/imu1_realtive/data', Imu, queue_size=3)
+    pub_1 = rospy.Publisher('/imu_rel/imu2_realtive/data', Imu, queue_size=3)
+    pub_00 = rospy.Publisher('imu_rel/imu1_initial/data', Imu, queue_size=3)
+    pub_11 = rospy.Publisher('/imu_rel/imu2_initial/data', Imu, queue_size=3)
+    pub_2 = rospy.Publisher('/imu_rel/imu2_realtive_imu1/data', Imu, queue_size=3)
 
     while not rospy.is_shutdown():
         # prevT = time.clock()

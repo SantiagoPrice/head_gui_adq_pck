@@ -140,10 +140,11 @@ def ref_display_node():
     
     index=True
 
-    sag_rng = (np.pi/6,0)
-    cor_rng = (np.pi/6,0)
-    rot_rng = (np.pi/6,0)
-    period = [5,3]
+    sag_rng = (np.pi/4.5,1)
+    cor_rng = (np.pi/6,1)
+    rot_rng = (np.pi/4.5,1)
+    period = [15,7]
+    repetitions = 2
     activation = True
     pos_l=get_qpostures (sag_rng, cor_rng, rot_rng)
     postures= []
@@ -157,8 +158,8 @@ def ref_display_node():
             if trig:
                 trig=False
                 #trigger.publish(Bool(False))
-                postures = list(pos_l).copy()
-                #random.shuffle(postures)
+                postures = list(pos_l).copy()*repetitions
+                random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
                 
         else:

@@ -1,0 +1,23 @@
+<launch> 
+
+	<arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/imu_w_ref.rviz"/>
+	
+    <node name="imu1" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+	    <param name="__name" value="imu1" type="str"/>
+	    <param name="_sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="_sensor_name" value="00:04:3E:6C:51:DC" type="str"/>
+	    <param name="imu" value="/imu1" type="str"/>  	
+	</node>
+
+    <node name="imu2" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+ 	    <param name="__name" value="imu2" type="str"/>
+	    <param name="_sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="_sensor_name" value="00:04:3E:6C:52:C4" type="str"/>
+	    <param name="imu" value="/imu2" type="str"/>   
+    </node>
+
+	<node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative.py" output="screen"/>
+  	<node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config_file)"/>
+
+</launch>
+

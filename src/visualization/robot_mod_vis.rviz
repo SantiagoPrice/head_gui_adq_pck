@@ -8,7 +8,6 @@ Panels:
         - /Status1
         - /Grid1
         - /RobotModel1
-        - /RobotModel1/Links1
         - /Imu1
         - /Imu1/Box properties1
         - /Imu2
@@ -63,18 +62,53 @@ Visualization Manager:
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
-      Enabled: false
+      Enabled: true
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
-        Link Tree Style: ""
+        Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link2_ref:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        base_link3_ref:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        head:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        head_ref:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       Robot Description: robot_description
       TF Prefix: ""
       Update Interval: 0
-      Value: false
+      Value: true
       Visual Enabled: true
     - Acceleration properties:
         Acc. vector alpha: 1
@@ -93,12 +127,12 @@ Visualization Manager:
         y_scale: 1
         z_scale: 1
       Class: rviz_imu_plugin/Imu
-      Enabled: true
+      Enabled: false
       Name: Imu
       Queue Size: 10
       Topic: /adq/imu_rel/imu1_realtive/data
       Unreliable: false
-      Value: true
+      Value: false
       fixed_frame_orientation: true
     - Acceleration properties:
         Acc. vector alpha: 1
@@ -117,12 +151,12 @@ Visualization Manager:
         y_scale: 1
         z_scale: 1
       Class: rviz_imu_plugin/Imu
-      Enabled: true
+      Enabled: false
       Name: Imu
       Queue Size: 10
       Topic: /adq/imu_rel/imu2_realtive/data
       Unreliable: false
-      Value: true
+      Value: false
       fixed_frame_orientation: true
     - Acceleration properties:
         Acc. vector alpha: 1
@@ -141,18 +175,18 @@ Visualization Manager:
         y_scale: 1
         z_scale: 1
       Class: rviz_imu_plugin/Imu
-      Enabled: true
+      Enabled: false
       Name: Imu
       Queue Size: 10
       Topic: /adq/imu_rel/imu2_realtive_imu1/data
       Unreliable: false
-      Value: true
+      Value: false
       fixed_frame_orientation: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: imu
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:

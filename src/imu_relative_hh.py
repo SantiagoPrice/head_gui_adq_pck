@@ -59,7 +59,8 @@ def self_check():
     IMU2_q = []
     # while imu1_q == np.quaternion(0.,0.,0.,0.) or imu2_q == np.quaternion(0.,0.,0.,0.):
     while imu2_q == np.quaternion(0.,0.,0.,0.):
-        print('wait for imu')
+        #print('wait for imu')
+        pass
 
     print('pre check OK')
 
@@ -245,8 +246,8 @@ def imu_measure_node():
     probe= rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/x', Float32, queue_size=3)
     probe2= rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/y', Float32, queue_size=3)
     probe3= rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/z', Float32, queue_size=3)
+    #pub_h = rospy.Publisher('/adq/imu_rel/imu2_realtive_imu1/Rstate', JointState, queue_size=2000)
     pub_h = rospy.Publisher('/joint_states', JointState, queue_size=2000)
-
     cnt = 0
     flt_str=False
     pb_flag=True
@@ -269,10 +270,10 @@ def imu_measure_node():
         #imu2_relative_imu1_q= imu2_relative_imu1_q  / offset_imu_pose 
         #displayIMUs(relative_imu1_q, relative_imu2_q, imu2_relative_imu1_q)
 
-        """imu1_realtive = visulaize_imu(relative_imu1_q)
+        imu1_realtive = visulaize_imu(relative_imu1_q)
         imu2_realtive = visulaize_imu(relative_imu2_q)
         imu1_initial = visulaize_imu(initial_imu1)
-        imu2_initial = visulaize_imu(initial_imu2)"""
+        imu2_initial = visulaize_imu(initial_imu2)
         imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)
 
         #visualize_posit(imu2_relative_imu1_q)
@@ -311,10 +312,10 @@ def imu_measure_node():
         probe.publish(head_angle.position[0])
         probe2.publish(head_angle.position[1])
         probe3.publish(head_angle.position[2])
-        """pub_0.publish(imu1_realtive)
+        pub_0.publish(imu1_realtive)
         pub_1.publish(imu2_realtive)
         pub_00.publish(imu1_initial)
-        pub_11.publish(imu2_initial)"""
+        pub_11.publish(imu2_initial)
         pub_2.publish(imu2_realtive_imu1)
         
 

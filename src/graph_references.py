@@ -128,7 +128,7 @@ def ref_display_node():
 
     #rospy.Timer(rospy.Duration(1), count_msg)
     
-    rate = rospy.Rate(2) #  1 [Hz]
+    rate = rospy.Rate(1) #  1 [Hz]
     
     print(colored(":"*80, "green"))
     print(colored("Ready to start experiments...", "green"))
@@ -143,8 +143,8 @@ def ref_display_node():
     sag_rng = (np.pi/4.5,1)
     cor_rng = (np.pi/6,1)
     rot_rng = (np.pi/4.5,1)
-    period = [15,7]
-    repetitions = 2
+    period = [2,2]
+    repetitions = 1
     activation = True
     pos_l=get_qpostures (sag_rng, cor_rng, rot_rng)
     postures= []

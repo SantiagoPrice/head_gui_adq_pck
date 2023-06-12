@@ -22,6 +22,8 @@ from termcolor import colored
 import quaternion
 from scipy.spatial.transform import Rotation as Ro
 
+from sound_play.libsoundplay import SoundClient
+
 imu_eular1 = [0.,0.,0.]
 imu_eular2 = [0.,0.,0.]
 imu_eular3 = [0.,0.,0.]
@@ -49,6 +51,11 @@ angles = [ "pitch" , "roll" , "yaw" , "pitch_ref" , "roll_ref" , "yaw_ref"]
 pos = [0 for i in range(6)]
 #head_angle = JointState(name=angles,position=pos)
 ref_ypr = [0,0,0]
+ref_flag = False
+
+AU_PATH = "/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/voice commands"
+audiocommands = [["/forward bending.wav","/backward bending.wav"],["/left rotation.wav","/right rotation.wav"],["/left bending.wav","/right bending.wav"],"/neutral position.wav"]
+audiofile=""
 
 ERR_TOL=np.pi/180*2
 
@@ -97,10 +104,22 @@ def callback_imu3(imu):
 
 def callback_ref(imu):
     #global head_angle
-    global ref_ypr
+    global ref_ypr , ref_flag, audiofile
     imu_q = np.quaternion(imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z)
     #head_angle.position[3:] = yawPitchRoll(imu_q ,ls=True)
+    
     ref_ypr = yawPitchRoll(imu_q ,ls=True)
+    mots = [ang != 0 for ang in ref_ypr]
+    if mots.count(True):
+        mot_ind=mots.index(True)
+        if ref_ypr[mot_ind] > 0:
+            audiofile = AU_PATH + audiocommands[mot_ind][0]
+        else:
+            audiofile = AU_PATH + audiocommands[mot_ind][1]
+    else:
+        audiofile = AU_PATH + audiocommands[-1]
+    ref_flag = True
+    
 
 def callback_offset(flag):
     global offset_imu_pose 
@@ -219,7 +238,7 @@ def count_msg(event):
 
 
 def imu_measure_node():
-    global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose , ERR_TOL#, relative_imu1_q, relative_imu2_q
+    global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose , ERR_TOL , ref_flag, audiofile#, relative_imu1_q, relative_imu2_q
     ########### Starting ROS Node ###########
     rospy.init_node('imu_relative_node', anonymous=True)
     rospy.Timer(rospy.Duration(1), count_msg)
@@ -252,6 +271,9 @@ def imu_measure_node():
     flt_str=False
     pb_flag=True
     errs=0
+
+    soundhandle = SoundClient()
+
     while not rospy.is_shutdown():
         # prevT = time.clock()
         # 
@@ -278,13 +300,19 @@ def imu_measure_node():
 
         #visualize_posit(imu2_relative_imu1_q)
         head_angle = visualize_posit(imu2_relative_imu1_q)
-        print(head_angle.position)
+        #print(head_angle.position)
 
         #nancond= not np.isnan(np.array(head_angle.position)).any()
         #zerocond = not (np.array(head_angle.position) < 0.5).all()
+        
+
+        if ref_flag:
+            ref_flag = False
+            soundhandle.playWave(audiofile,1)
 
         pub_h.publish(head_angle)
 
+        
         """
         avg_disp= (np.array(head_angle.position[:3])-prev_orient).mean() 
 
@@ -308,15 +336,15 @@ def imu_measure_node():
             errs+=1
         pb_flag=True
         """
-        #probe.publish(yawPitchRoll(imu2_relative_imu1_q, ls = True)[0])
-        probe.publish(head_angle.position[0])
-        probe2.publish(head_angle.position[1])
-        probe3.publish(head_angle.position[2])
-        pub_0.publish(imu1_realtive)
-        pub_1.publish(imu2_realtive)
-        pub_00.publish(imu1_initial)
-        pub_11.publish(imu2_initial)
-        pub_2.publish(imu2_realtive_imu1)
+        #probe.publish(yawPitchRoll(imu2_relative_imu1_q, lsstd_msgs = True)[0])
+        #probe.publish(head_angle.position[0])
+        #probe2.publish(head_angle.position[1])
+        #probe3.publish(head_angle.position[2])
+        #pub_0.publish(imu1_realtive)
+        #pub_1.publish(imu2_realtive)
+        #pub_00.publish(imu1_initial)
+        #pub_11.publish(imu2_initial)
+        #pub_2.publish(imu2_realtive_imu1)
         
 
         rate.sleep()

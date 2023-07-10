@@ -19,6 +19,8 @@ from sensor_msgs.msg import Imu
 from std_msgs.msg import String, Bool, Float32MultiArray, Float32, Int32MultiArray
 from std_msgs.msg import MultiArrayLayout, MultiArrayDimension, Header
 
+from sound_play.libsoundplay import SoundClient
+
 from termcolor import colored
 import quaternion
 
@@ -28,11 +30,15 @@ import quaternion
 
 self_check_flag = 1
 initializ_flag = 1
+AU_PATH = "/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/voice commands"
+
 
 num_msg_recieved= 0
 
 relative_imu_pose = Imu()
 trig= False
+trial = False
+abort = False
 
 # self check if the readings form FSR are OK, if not OK, better not start the control program, considering safety issue.
 def self_check():
@@ -48,8 +54,21 @@ def self_check():
 def callback_start(flag):
     global trig #
     print ("flag was toggled")
-    # imu2_q = imu.orientation
     trig=flag.data
+
+def callback_trial(flag):
+    global trial #
+    print ("flag was toggled")
+    trial=flag.data
+
+
+def callback_abort(flag):
+    global abort #
+    print ("flag was toggled")
+    abort=flag.data
+
+
+
 
 def yawPitchRoll(q):
     """Function that converts quaternion to the yaw pitch roll representation
@@ -121,7 +140,7 @@ def get_qpostures (sag_rng, cor_rng, rot_rng):
     return quaternion.from_rotation_vector(rVcts[1:,:])
 
 def ref_display_node():
-    global trig
+    global trig, trial , abort
     global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose #, relative_imu1_q, relative_imu2_q
     ########### Starting ROS Node ###########
     rospy.init_node('graph_ref_node', anonymous=True)
@@ -137,50 +156,86 @@ def ref_display_node():
     ref = rospy.Publisher('/adq/reference/data', Imu, queue_size=3)
     #trigger = rospy.Publisher('/reference/start', Bool , queue_size=1)
     rospy.Subscriber('/adq/reference/start', Bool , callback_start, queue_size=1)
+    rospy.Subscriber('/adq/reference/trial', Bool , callback_trial, queue_size=1)
+    rospy.Subscriber('/adq/reference/abort', Bool , callback_abort, queue_size=1)
     
     index=True
 
     sag_rng = (np.pi/4.5,1)
     cor_rng = (np.pi/6,1)
     rot_rng = (np.pi/4.5,1)
-    period = [2,2]
+
+    exp_period = [5,15]
+    #exp_period = [2,2]
+
     repetitions = 1
-    activation = True
+    activation = False
     pos_l=get_qpostures (sag_rng, cor_rng, rot_rng)
+
+    pos_trial = get_qpostures((np.pi/6,0),(np.pi/4.5,0),(np.pi/4.5,0))
+    test_period = [5,5]
     postures= []
 
-    cr_cl=1
+    soundhandle = SoundClient()
+    period = [2,2]
+
+    cr_cl=0
     while not rospy.is_shutdown():
 
         num_msg_recieved += 1
         index= not index
         if len(postures)== 0:
+            cr_cl=0
             if trig:
                 trig=False
+                activation = False
                 #trigger.publish(Bool(False))
                 postures = list(pos_l).copy()*repetitions
                 random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
+                soundhandle.playWave(AU_PATH + "/sequence start.wav" ,1)
+                period = exp_period
+                
+
+            if trial:
+                trial=False
+                #trigger.publish(Bool(False))
+                postures = list(pos_trial).copy()*repetitions
+                random.shuffle(postures)
+                postures.append(quaternion.quaternion(1,0,0,0))
+                soundhandle.playWave(AU_PATH + "/trial start.wav",1)
+                period = test_period
                 
         else:
             if  cr_cl == period[activation]:
                 cr_cl=0
+                activation= not activation
                 if activation: 
                     reference_q= postures.pop(0)
                 else:
                     reference_q= quaternion.quaternion(1,0,0,0)
+
                 print(reference_q)
                 reference = visulaize_imu(reference_q)
                 ref.publish(reference)
-                activation= not activation
+                
                 print(postures)
-            cr_cl+=1
+
+        if abort:
+            abort=False
+            soundhandle.playWave(AU_PATH + "/the sequence was terminated.wav",1)
+            reference = visulaize_imu(quaternion.quaternion(1,0,0,0))
+            ref.publish(reference)
+            postures = []
+
+        cr_cl+=1
  
 
         rate.sleep()
 
     logger.exit()
 # for interruption
+
 signal.signal(signal.SIGINT, exit)
 signal.signal(signal.SIGTERM, exit)
 

@@ -16,3 +16,12 @@ connect other IMUs through cable: ``rosrun openzen_sensor openzen_sensor_node __
 3. Add the pluggin "Easy message publisher"
 
 4. Open the topics "/adq/reference/start" (for starting the motion sequence of the reference) and "/adq/imu_rel/offset" (for adding an offset to correct the marker position) 
+
+# Use of PyQt in ROS: Asses if the Qt platform address is reachable by the progr,
+
+1. OPEN THE BASHRC SCRIPT (nano ~/.bashrc)
+
+2. Add the line (export QT_QPA_PLATFORM_PLUGIN_PATH=/path/to/Qt/plugins/platforms)
+
+3. Apply changes (source ~/.bashrc)
+

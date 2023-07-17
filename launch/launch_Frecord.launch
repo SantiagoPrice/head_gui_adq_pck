@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+
+
+   <!--Note Imu 2 must be mounted on the head, Imu 1 on the body-->
+  <group ns="imu1">
+
+    <node name="ig1_node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+    	<param name="name" value="ig1_node" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:52:C4" type="str"/>
+	    <param name="imu" value="/ig1_node" type="str"/>  
+   </node> 
+  </group> 
+ 
+  <group ns="imu2">  
+    <node name="cu2node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+ 	    <param name="name" value="imu2" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:51:DC" type="str"/>
+	    <param name="imu" value="/cu2_imu" type="str"/>   
+    </node> 
+  </group>   
+
+  <!-- Nodes for getting IMUs relative position-->  
+  <group ns="adq">
+    <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
+    <node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative.py" output="screen"/>
+    <node name="GUI" pkg="IMU_ADQ_pck" type="gui_Fcharact.py" output="screen"/>
+    <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->
+  </group> 
+        
+
+</launch>

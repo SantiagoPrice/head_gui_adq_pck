@@ -223,6 +223,7 @@ def visualize_posit(q):
     head_state = JointState(name=angles,position=pos)
     head_state.header.stamp = rospy.Time.now()
     head_state.position[:3]= yawPitchRoll(q, ls = True)
+    #head_state.position[:3]*=-1
     head_state.position[3:]= ref_ypr
     return head_state
 

@@ -226,8 +226,8 @@ def imu_measure_node():
         imu2_initial = visulaize_imu(initial_imu2)
         imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)
         
-        print("First IMU {}".format(relative_imu1_q))
-        print("Second IMU {}".format(relative_imu2_q))
+        #print("First IMU {}".format(relative_imu1_q))
+        #print("Second IMU {}".format(relative_imu2_q))
 
         pub_0.publish(imu1_realtive)
         pub_1.publish(imu2_realtive)

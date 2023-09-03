@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="robot_description" textfile="$(find IMU_ADQ_pck)/urdf/human_head_w_body_ref.urdf"/>
+  <arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/robot_mod_vis_wback.rviz"/>
+  <arg name="rviz_config_file2" default="$(find IMU_ADQ_pck)/src/visualization/robot_mod_vis_wback2.rviz"/>
+  
+  <!-- Nodes for initializinf 3d model of the human head-->  
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <!--rosparam param="source_list">["/imu_rel/imu2_realtive_imu1/Rstate"]</rosparam-->
+    <param name="rate" value="0"/>  <!-- Important for avoiding head flickering motion-->  
+  </node>
+
+   <!--Note Imu 2 must be mounted on the head, Imu 1 on the body-->
+  <group ns="imu1">
+
+    <node name="ig1_node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+    	<param name="name" value="ig1_node" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:51:DC" type="str"/>
+	    <param name="imu" value="/ig1_node" type="str"/>  
+   </node> 
+  </group> 
+ 
+  <group ns="imu2">  
+    <node name="cu2node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+ 	    <param name="name" value="imu2" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:52:C4" type="str"/>
+	    <param name="imu" value="/cu2_imu" type="str"/>   
+    </node> 
+  </group>   
+
+  <!-- Nodes for getting IMUs relative position-->  
+  <group ns="adq">
+    <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
+    <node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative_hb.py" output="screen"/>
+    <node name="graph_ref" pkg="IMU_ADQ_pck" type="graph_references.py" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config_file)"/>
+    <node pkg="rviz" type="rviz" name="rvizl" args="-d $(arg rviz_config_file2)"/>
+    <node name="GUI" pkg="IMU_ADQ_pck" type="gui_test.py" output="screen"/>
+    <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->
+  </group> 
+        
+
+</launch>

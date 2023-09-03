@@ -28,15 +28,15 @@ imu_eular1 = [0.,0.,0.]
 imu_eular2 = [0.,0.,0.]
 imu_eular3 = [0.,0.,0.]
 
-imu1_q = np.quaternion(0.,0.,0.,0.)
-imu2_q = np.quaternion(0.,0.,0.,0.)
-imu3_q = np.quaternion(0.,0.,0.,0.)
+imu1_q = np.quaternion(1.,0.,0.,0.)
+imu2_q = np.quaternion(1.,0.,0.,0.)
+imu3_q = np.quaternion(1.,0.,0.,0.)
 
-initial_imu1 = np.quaternion(0.,0.,0.,0.)
-initial_imu2 = np.quaternion(0.,0.,0.,0.)
+initial_imu1 = np.quaternion(1.,0.,0.,0.)
+initial_imu2 = np.quaternion(1.,0.,0.,0.)
 
-relative_imu1_q = np.quaternion(0.,0.,0.,0.)
-relative_imu2_q = np.quaternion(0.,0.,0.,0.)
+relative_imu1_q = np.quaternion(1.,0.,0.,0.)
+relative_imu2_q = np.quaternion(1.,0.,0.,0.)
 
 self_check_flag = 1
 initializ_flag = 1
@@ -47,7 +47,7 @@ relative_imu_pose = Imu()
 offset_imu_pose = np.quaternion(1.,0.,0.,0.) 
 
 
-angles = [ "pitch" , "roll" , "yaw" , "pitch_ref" , "roll_ref" , "yaw_ref"]
+angles = [ "roll" , "yaw" ,"pitch" ,  "pitch_ref" , "roll_ref" , "yaw_ref"]
 pos = [0 for i in range(6)]
 #head_angle = JointState(name=angles,position=pos)
 ref_ypr = [0,0,0]
@@ -64,8 +64,8 @@ def self_check():
     global imu1_q, imu2_q, IMU1_q, IMU2_q
     IMU1_q = []
     IMU2_q = []
-    # while imu1_q == np.quaternion(0.,0.,0.,0.) or imu2_q == np.quaternion(0.,0.,0.,0.):
-    while imu2_q == np.quaternion(0.,0.,0.,0.):
+    # while imu1_q == np.quaternion(1.,0.,0.,0.) or imu2_q == np.quaternion(1.,0.,0.,0.):
+    while imu2_q == np.quaternion(1.,0.,0.,0.):
         #print('wait for imu')
         pass
 
@@ -206,7 +206,7 @@ def self_relative():
     # relative_imu1_q  = imu1_q * initial_imu1.inverse()
     relative_imu1_q  = 1/initial_imu1 * imu1_q
     relative_imu2_q  = 1/initial_imu2 * imu2_q
-    imu2_relative_imu1_q = 1/ offset_imu_pose *1/relative_imu1_q *  relative_imu2_q 
+    imu2_relative_imu1_q = 1/relative_imu1_q *  relative_imu2_q * 1/ offset_imu_pose 
 
     # imu2_relative_imu1_e= quaternion.as_rotation_vector(imu2_relative_imu1_q)
     #imu2_relative_imu1_e = (Ro.from_quat([imu2_relative_imu1_q.x, imu2_relative_imu1_q.y, imu2_relative_imu1_q.z, imu2_relative_imu1_q.w])).as_euler("zxy", degrees=True)
@@ -299,7 +299,11 @@ def imu_measure_node():
         imu2_initial = visulaize_imu(initial_imu2)
         imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)
 
+
+
         #visualize_posit(imu2_relative_imu1_q)
+        #head_angle = visualize_posit(imu2_relative_imu1_q)
+        #head_angle = visualize_posit(imu2_relative_imu1_q)
         head_angle = visualize_posit(imu2_relative_imu1_q)
         #print(head_angle.position)
 
@@ -345,7 +349,7 @@ def imu_measure_node():
         #pub_1.publish(imu2_realtive)
         #pub_00.publish(imu1_initial)
         #pub_11.publish(imu2_initial)
-        #pub_2.publish(imu2_realtive_imu1)
+        pub_2.publish(imu2_realtive_imu1)
         
 
         rate.sleep()

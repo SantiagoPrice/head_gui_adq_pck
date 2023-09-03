@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<robot name="/* robot_name */">
+
+  <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <material name="green">
+    <color rgba="0.5 1 0 1"/>
+  </material>
+  
+  
+  <!-- ___________________________IMU MARKERS!_______________________________________________________________-->
+
+  <!--TORSO-->
+
+  <link name="ground">
+    <visual>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+       <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+  
+  <link name="temp">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.2"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="temp2">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.2"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="spine">
+    <visual>
+      <geometry>
+        <mesh filename="package://IMU_ADQ_pck/urdf/mesh/tlspine.STL" scale="0.008 0.008 0.008"/>
+      </geometry>
+      <origin rpy="1.54 0 -1.54 " xyz="0.35 0.7 0"/>
+      <material name="white"/>
+    </visual>
+  </link>
+
+  <joint name="pitch_sp" type="continuous">
+    <parent link="ground"/>
+    <child link="temp"/>
+    <axis xyz="-1.0 0.0 0"/>
+    <origin xyz="0 0 -2.4"/>
+  </joint>
+
+  <joint name="yaw_sp" type="continuous">
+    <parent link="temp"/>
+    <child link="temp2"/>
+    <axis xyz="0.0 -1.0 0.0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+  <joint name="roll_sp" type="continuous">
+    <parent link="temp2"/>
+    <child link="spine"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+  <!--HEAD-->
+  <link name="temp1_1">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.2"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="temp1_2">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.2"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+   
+  <link name="head">
+    <visual>
+      <origin xyz="0 0 1.15" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://IMU_ADQ_pck/urdf/mesh/human-head-simplified.dae" scale="0.008 0.008 0.008"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.3"/>
+      <material name="white"/>
+    </visual>
+  </link>
+  
+
+  
+ <joint name="pitch_hd" type="continuous">
+    <parent link="spine"/>
+    <child link="temp1_1"/>
+    <axis xyz="-1.0 0.0 0.0"/>
+    <origin xyz="0 0 4.88"/>
+  </joint>
+
+
+  <joint name="yaw_hd" type="continuous">
+    <parent link="temp1_1"/>
+    <child link="temp1_2"/>
+    <axis xyz="0.0 -1.0 0.0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+
+  <joint name="roll_hd" type="continuous">
+    <parent link="temp1_2"/>
+    <child link="head"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+  </joint>
+
+
+  <!-- ___________________________REFERENCE PART!_______________________________________________________________-->
+<!--TORSO-->
+
+  <link name="spine_ref">
+    <visual>
+      <geometry>
+        <mesh filename="package://IMU_ADQ_pck/urdf/mesh/tlspine.STL" scale="0.008 0.008 0.008"/>
+      </geometry>
+      <origin rpy="1.54 0 -1.54 " xyz="0.35 0.7 0"/>
+      <material name="green"/>
+    </visual>
+  </link>
+
+  <joint name="spine_attch" type="fixed">
+    <parent link="ground"/>
+    <child link="spine_ref"/>
+    <origin xyz="0 0 -2.4"/>
+  </joint>
+
+
+  <!--HEAD-->
+  <link name="temp1_1_ref">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.2"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+
+  <link name="temp1_2_ref">
+    <visual>
+      <geometry>
+        <cylinder length="0.2" radius="0.2"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+  </link>
+   
+  <link name="head_ref">
+    <visual>
+      <origin xyz="0 0 1.15" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://IMU_ADQ_pck/urdf/mesh/human-head-simplified.dae" scale="0.008 0.008 0.008"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.3"/>
+      <material name="green"/>
+    </visual>
+  </link>
+  
+
+  
+ <joint name="pitch_ref" type="continuous">
+    <parent link="spine_ref"/>
+    <child link="temp1_1_ref"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <origin xyz="0 0 4.88"/>
+  </joint>
+
+
+  <joint name="yaw_ref" type="continuous">
+    <parent link="temp1_1_ref"/>
+    <child link="temp1_2_ref"/>
+    <axis xyz="0.0 -1.0 0.0"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+
+
+  <joint name="roll_ref" type="continuous">
+    <parent link="temp1_2_ref"/>
+    <child link="head_ref"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="0.0 0.0 -1.0"/>
+  </joint>
+</robot>

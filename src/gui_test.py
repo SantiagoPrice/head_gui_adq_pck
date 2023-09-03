@@ -5,9 +5,9 @@ from std_msgs.msg import Bool , Empty
 from sensor_msgs.msg import JointState
 import signal
 
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QCheckBox, QLineEdit, QComboBox, QPushButton , QRadioButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QCheckBox, QLineEdit, QComboBox, QPushButton , QRadioButton , QAction
 from PyQt5.QtCore import QTimer
-N_PART=6
+N_PART=11
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -30,7 +30,7 @@ class MainWindow(QWidget):
         name_label = QLabel('Name:')
         #self.name_entry = QLineEdit()
         self.name_entry = QComboBox()
-        for i in range(N_PART):
+        for i in range(6,N_PART):
             self.name_entry.addItem('Part {}'.format(i+1))
         self.name_entry.addItem('Test'.format(i+1))
         layout.addWidget(name_label)
@@ -57,6 +57,14 @@ class MainWindow(QWidget):
         abort_button = QPushButton('Abort')
         start_button = QPushButton('Start Experiment')
         reset_button = QPushButton('Reset Q')
+
+        close_debug = QTimer(self)
+        close_debug.timeout.connect(self.ROSclosed)
+        close_debug.start(2000)
+
+        quit = QAction("Quit", self)
+        quit.triggered.connect(self.closeEvent)
+
         #demonstration_button.clicked.connect(self.send_demo_request)
         abort_button.clicked.connect(self.send_abort_request)
         start_button.clicked.connect(self.send_start_request)
@@ -76,13 +84,20 @@ class MainWindow(QWidget):
         self.reset_pub = rospy.Publisher('/adq/imu_rel/offset', Bool, queue_size=10)
         self.close_pub = rospy.Publisher('/rosout/stop_logging', Empty, queue_size=10)
     
-    def closeEvent(self, event):
-        #rospy.loginfo("Publishing stop_logging message")  
+    def ROSclosed(self):
+         print("checking if everything is working")
+         if rospy.is_shutdown():
+              self.close()
+    
+    def closeEvent(self ,event):
+        #rospy.loginfo("Publishing stop_logging message")
+        print("GUI was closed")  
         rospy.signal_shutdown("Closing all the nodes")
         #self.close_pub.publish()
-        super().closeEvent(event)
+        
     
     def joint_state_callback(self, msg):
+        
         if self.record["cond"]:# and self.save_checkbox.isChecked():
                 fn = self.record["filename"]
                 filename = self.rec_fold + f"{self.name_entry.currentText()}_{fn}.txt"
@@ -111,6 +126,7 @@ class MainWindow(QWidget):
         
 
     def send_reset_request(self):
+        print("orientation was reset")
         self.reset_pub.publish(True)
     
     def start_timer_callback(self):

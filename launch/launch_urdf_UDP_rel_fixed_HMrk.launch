@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/quatMark_head.rviz"/>
+   <arg name="rviz_config_file2" default="$(find IMU_ADQ_pck)/src/visualization/quatMark_head2.rviz"/>
+  <!--Note Imu 2 must be mounted on the head, Imu 1 on the body-->
+  
+ 
+
+  <!-- Nodes for getting IMUs relative position-->  
+  <group ns="adq">
+    <node name="mrkrs" pkg="IMU_ADQ_pck" type="UDP_node_hb.py" output="screen"/>
+    <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
+    <node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative_hh.py" output="screen"/>
+    <node name="graph_ref" pkg="IMU_ADQ_pck" type="graph_references_smooth.py" output="screen"/>
+    <node name="HMark" pkg="IMU_ADQ_pck" type="HMarker_node.py" output="screen"/>
+    <node name="RMark" pkg="IMU_ADQ_pck" type="RefMarker_node.py" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rvizsag" args="-d $(arg rviz_config_file)"/>
+    <node pkg="rviz" type="rviz" name="rvizlat" args="-d $(arg rviz_config_file2)"/>
+    <node name="GUI" pkg="IMU_ADQ_pck" type="gui_test.py" output="screen"/>
+  </group> 
+        
+
+</launch>

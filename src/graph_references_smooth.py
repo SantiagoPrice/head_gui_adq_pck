@@ -31,7 +31,11 @@ import quaternion
 self_check_flag = 1
 initializ_flag = 1
 AU_PATH = "/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/voice commands"
+audiocommands = [["/forward bending.wav","/backward bending.wav"],["/left rotation.wav","/right rotation.wav"],["/left bending.wav","/right bending.wav"],"/neutral position.wav"]
+audiofile=""
 
+
+ndF=100
 
 num_msg_recieved= 0
 
@@ -70,8 +74,9 @@ def callback_abort(flag):
 
 
 
-def yawPitchRoll(q):
+def yawPitchRoll(q, ls = False):
     """Function that converts quaternion to the yaw pitch roll representation
+    This representation corresponds to a tait-bryan rotation of xyz-order.
     Input: 
         .q: quaternion
     Output:
@@ -80,8 +85,11 @@ def yawPitchRoll(q):
     yaw = np.arctan2(2.0*(q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z);
     pitch = np.arcsin(-2.0*(q.x*q.z - q.w*q.y));
     roll = np.arctan2(2.0*(q.x*q.y + q.w*q.z), q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z);
-    return ((np.array((yaw , pitch , roll))+np.pi)%(2*np.pi)-np.pi) * 180/np.pi
-
+    if ls:
+        return [yaw , pitch , roll]
+    else:
+        return ((np.array((yaw , pitch , roll))+np.pi)%(2*np.pi)-np.pi) * 180/np.pi
+    
 def displayIMUs(q1,q2,q3):
     """
     Returns
@@ -147,7 +155,7 @@ def ref_display_node():
 
     #rospy.Timer(rospy.Duration(1), count_msg)
     
-    rate = rospy.Rate(1) #  1 [Hz]
+    rate = rospy.Rate(ndF) #  1 [Hz]
     
     print(colored(":"*80, "green"))
     print(colored("Ready to start experiments...", "green"))
@@ -161,31 +169,35 @@ def ref_display_node():
     
     index=True
 
-    sag_rng = (np.pi/4.5,1)
+    sag_rng = (np.pi/6,1)
     cor_rng = (np.pi/6,1)
     rot_rng = (np.pi/4.5,1)
 
-    exp_period = [5,15]
+    exp_period = [5,3,6,3]
     #exp_period = [2,2]
 
     repetitions = 1
     activation = False
-    pos_l=get_qpostures (sag_rng, cor_rng, rot_rng)
+    pos_l=get_qpostures (sag_rng, rot_rng , cor_rng)
 
-    pos_trial = get_qpostures((np.pi/6,0),(np.pi/4,0),(np.pi/6,0))
-    test_period = [5,5]
+    pos_trial = get_qpostures(sag_rng, rot_rng , cor_rng)
+    test_period = [2,3,4,3]
     postures= []
 
     soundhandle = SoundClient()
-    period = [2,2]
+    period = [1,1,1,1]
+
 
     cr_cl=0
+    o_reference_q=quaternion.quaternion(1,0,0,0)
+    reference_q=quaternion.quaternion(1,0,0,0)
+    int_ang=[]
     while not rospy.is_shutdown():
 
         num_msg_recieved += 1
         index= not index
         if len(postures)== 0:
-            cr_cl=0
+            
             if trig:
                 trig=False
                 activation = False
@@ -194,32 +206,74 @@ def ref_display_node():
                 random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
                 soundhandle.playWave(AU_PATH + "/sequence start.wav" ,1)
-                period = exp_period
+                period = [exp_period[0]+exp_period[3],exp_period[1]+exp_period[2]]
+                period_trans=[exp_period[1],exp_period[3]]
+                cr_cl = test_period[3]*ndF
+                
                 
 
             if trial:
                 trial=False
+                activation=False
                 #trigger.publish(Bool(False))
                 postures = list(pos_trial).copy()*repetitions
                 random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
                 soundhandle.playWave(AU_PATH + "/trial start.wav",1)
-                period = test_period
+                period = [test_period[0]+test_period[3],test_period[1]+test_period[2]]
+                period_trans=[test_period[1],test_period[3]]
+                cr_cl = test_period[3]*ndF
                 
         else:
-            if  cr_cl == period[activation]:
+
+            if  cr_cl == period[activation]*100:
                 cr_cl=0
                 activation= not activation
+                o_reference_q=reference_q
                 if activation: 
                     reference_q= postures.pop(0)
+
+                    
+                    
                 else:
                     reference_q= quaternion.quaternion(1,0,0,0)
 
-                print(reference_q)
-                reference = visulaize_imu(reference_q)
-                ref.publish(reference)
+                ref_ypr = yawPitchRoll(reference_q ,ls=True)
+                mots = [ang != 0 for ang in ref_ypr]
+                if mots.count(True):
+                    mot_ind=mots.index(True)
+                    if ref_ypr[mot_ind] > 0:
+                        audiofile = AU_PATH + audiocommands[mot_ind][0]
+                    else:
+                        audiofile = AU_PATH + audiocommands[mot_ind][1]
+                else:
+                    audiofile = AU_PATH + audiocommands[-1]    
+
+                soundhandle.playWave(audiofile,1)
+
+                Ttrans= period_trans[activation]
+
+                disp_q=1/o_reference_q * reference_q
+                rv = quaternion.as_rotation_vector(disp_q)
+                ang_disp=np.linalg.norm(rv)
+                rv/=ang_disp
+                inst_ang_lin=np.linspace(0,ang_disp,Ttrans*ndF)
+                #inst_ang_nonlin=((np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)*abs(np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)))+1)/2*ang_disp
+                int_ang=list(inst_ang_lin)
                 
-                print(postures)
+                
+                
+                #print(postures)
+            else:
+                if int_ang:
+                        inst_ang=int_ang.pop(0)
+                        inst_rv=(rv*inst_ang).reshape(1,-1)
+
+                        disp_q=quaternion.from_rotation_vector(inst_rv)[0]
+
+                        reference = visulaize_imu(o_reference_q*disp_q)
+                       
+                        ref.publish(reference)
 
         if abort:
             abort=False

@@ -47,7 +47,7 @@ relative_imu_pose = Imu()
 offset_imu_pose = np.quaternion(1.,0.,0.,0.) 
 
 
-angles = [ "roll" , "yaw" ,"pitch" ,  "pitch_ref" , "roll_ref" , "yaw_ref"]
+angles = ["pitch" , "roll" , "yaw" ,  "pitch_ref" , "roll_ref" , "yaw_ref"]
 pos = [0 for i in range(6)]
 #head_angle = JointState(name=angles,position=pos)
 ref_ypr = [0,0,0]
@@ -108,16 +108,17 @@ def callback_ref(imu):
     imu_q = np.quaternion(imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z)
     #head_angle.position[3:] = yawPitchRoll(imu_q ,ls=True)
     
-    ref_ypr = yawPitchRoll(imu_q ,ls=True)
-    mots = [ang != 0 for ang in ref_ypr]
-    if mots.count(True):
-        mot_ind=mots.index(True)
-        if ref_ypr[mot_ind] > 0:
-            audiofile = AU_PATH + audiocommands[mot_ind][0]
-        else:
-            audiofile = AU_PATH + audiocommands[mot_ind][1]
-    else:
-        audiofile = AU_PATH + audiocommands[-1]
+    # ref_ypr = yawPitchRoll(imu_q ,ls=True)
+    # mots = [ang != 0 for ang in ref_ypr]
+    # if mots.count(True):
+    #     mot_ind=mots.index(True)
+    #     if ref_ypr[mot_ind] > 0:
+    #         audiofile = AU_PATH + audiocommands[mot_ind][0]
+    #     else:
+    #         audiofile = AU_PATH + audiocommands[mot_ind][1]
+    # else:
+    #     audiofile = AU_PATH + audiocommands[-1]
+
     ref_flag = True
     
 
@@ -143,7 +144,9 @@ def yawPitchRoll(q, ls = False):
         return [yaw , pitch , roll]
     else:
         return ((np.array((yaw , pitch , roll))+np.pi)%(2*np.pi)-np.pi) * 180/np.pi
-    
+
+
+
                     
 def displayIMUs(q1,q2,q3):
     """
@@ -187,7 +190,7 @@ def visulaize_imu(q):
     # relative_imu_pose.angular_velocity = create_vector3(sci.groll, sci.gpitch, sci.gyaw)
 
 def initial_pose():
-    global imu1_q, imu2_q, IMU1_q, IMU2_q, initial_imu1, initial_imu2
+    global imu1_q, imu2_q, IMU1_q, IMU2_q, initial_imu1, initial_imu2, offset_imu_pose
     IMU1_q = np.array(()) #[]
     IMU2_q = np.array(()) #[]
     while len(IMU1_q)< 100 or len(IMU2_q)< 100:
@@ -196,16 +199,19 @@ def initial_pose():
     # print ("IMU1_q =", IMU1_q)
     initial_imu1 =  quaternion.mean_rotor_in_chordal_metric(IMU1_q)
     initial_imu2 =  quaternion.mean_rotor_in_chordal_metric(IMU2_q)
+    offset_imu_pose= 1/initial_imu1 * initial_imu2
     # initial_imu1 = imu1_q
     # initial_imu2 = imu2_q
     # print ("initial_imu1 =", initial_imu1)
 
 def self_relative():
-    global imu1_q, imu2_q, initial_imu1, initial_imu2 #, relative_imu1_q, relative_imu2_q
+    global imu1_q, imu2_q, initial_imu1, initial_imu2 , offset_imu_pose#, relative_imu1_q, relative_imu2_q
     # relative_imu1_q  = imu1_q / initial_imu1
     # relative_imu1_q  = imu1_q * initial_imu1.inverse()
-    relative_imu1_q  = 1/initial_imu1 * imu1_q
-    relative_imu2_q  = 1/initial_imu2 * imu2_q
+    #relative_imu1_q  = 1/initial_imu1 * imu1_q
+    #relative_imu2_q  = 1/initial_imu2 * imu2_q
+    relative_imu1_q  =  imu1_q
+    relative_imu2_q  =  imu2_q
     imu2_relative_imu1_q = 1/relative_imu1_q *  relative_imu2_q * 1/ offset_imu_pose 
 
     # imu2_relative_imu1_e= quaternion.as_rotation_vector(imu2_relative_imu1_q)
@@ -223,7 +229,8 @@ def visualize_posit(q):
     head_state = JointState(name=angles,position=pos)
     head_state.header.stamp = rospy.Time.now()
     head_state.position[:3]= yawPitchRoll(q, ls = True)
-    #head_state.position[:3]*=-1
+    head_state.position[1]*=-1
+    head_state.position[2]*=-1
     head_state.position[3:]= ref_ypr
     return head_state
 
@@ -311,9 +318,9 @@ def imu_measure_node():
         #zerocond = not (np.array(head_angle.position) < 0.5).all()
         
 
-        if ref_flag:
-            ref_flag = False
-            soundhandle.playWave(audiofile,1)
+        # if ref_flag:
+        #     ref_flag = False
+        #     soundhandle.playWave(audiofile,1)
 
         pub_h.publish(head_angle)
 
@@ -345,8 +352,8 @@ def imu_measure_node():
         #probe.publish(head_angle.position[0])
         #probe2.publish(head_angle.position[1])
         #probe3.publish(head_angle.position[2])
-        #pub_0.publish(imu1_realtive)
-        #pub_1.publish(imu2_realtive)
+        pub_0.publish(imu1_realtive)
+        pub_1.publish(imu2_realtive)
         #pub_00.publish(imu1_initial)
         #pub_11.publish(imu2_initial)
         pub_2.publish(imu2_realtive_imu1)

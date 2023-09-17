@@ -85,7 +85,6 @@ class MainWindow(QWidget):
         self.close_pub = rospy.Publisher('/rosout/stop_logging', Empty, queue_size=10)
     
     def ROSclosed(self):
-         print("checking if everything is working")
          if rospy.is_shutdown():
               self.close()
     

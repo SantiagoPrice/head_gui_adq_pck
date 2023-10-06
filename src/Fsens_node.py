@@ -8,7 +8,8 @@ import signal
 
 MEAS_AVG=70
 num_msg_recieved=0
-
+filename="/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/participant_record/force_elia"
+angle="30s"
 def count_msg(event):
     global num_msg_recieved
     msg_fre = num_msg_recieved / 1
@@ -89,6 +90,8 @@ def imu_measure_node():
             FXYZ.x=fxyz[0]
             FXYZ.y=fxyz[1]
             FXYZ.z=fxyz[2]
+            with open(filename+angle+".txt","a") as f:
+                f.write(",".join([str(fr) for fr in fxyz])+"\n")                      
             pub.publish(FXYZ)
             FXavg=0
             FYavg=0

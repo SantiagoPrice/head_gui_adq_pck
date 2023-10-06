@@ -26,7 +26,10 @@ import quaternion
 
 
 
-
+RP_TRAN_BS_T="/ExpSeq/Time/transitionbs"
+RP_TRAN_SB_T="/ExpSeq/Time/transitionsb"
+RP_STR_T="/ExpSeq/Time/straight"
+RP_BNT_T="/ExpSeq/Time/bent"
 
 self_check_flag = 1
 initializ_flag = 1
@@ -35,7 +38,7 @@ audiocommands = [["/forward bending.wav","/backward bending.wav"],["/left rotati
 audiofile=""
 
 
-ndF=100
+ndF=100  # Node frequency
 
 num_msg_recieved= 0
 
@@ -127,8 +130,9 @@ def count_msg(event):
 def get_qpostures (sag_rng, cor_rng, rot_rng):
     """ Function that returns the quaternion for each precribed posture:
     Input:
-        .xxx_rng: (max ang, int_post)
-            . max_ang maximum deflection  angle at the given plane
+        .xxx_rng: (max_angn max angp, int_post)
+            . max_angn maximum deflection  angle at the given plane in the negative direction (hiper extension right bending, anticlockwise rotation)
+            . max_angp maximum deflection  angle at the given plane (flexion, left bending, clockwise rotation)
             . int_post: number of positions between maximum deflection and the straight pose
     Output:
         . qposes: quaterion list with each of the prescribed pose 
@@ -137,10 +141,11 @@ def get_qpostures (sag_rng, cor_rng, rot_rng):
     pos_lst= [sag_rng+(0,), cor_rng+(1,), rot_rng+(2,)]
     rVcts = np.zeros([1,3])
 
-    for Mang , nPos , axis in pos_lst:
+    for Mangn , Mangp , nPos , axis in pos_lst:
     
         axiss = np.zeros(((nPos+1)*2,3))       
-        angs = np.linspace(-Mang,Mang,(nPos+1)*2)
+        angs = np.linspace(-Mangn,Mangp,(nPos+1)*2+1)
+        angs=angs[angs!=0] # This doesnt work for uneven angles
         axiss[:,axis] = angs
         print(angs)
         rVcts = np.append(rVcts, axiss,axis=0)
@@ -169,9 +174,9 @@ def ref_display_node():
     
     index=True
 
-    sag_rng = (np.pi/6,1)
-    cor_rng = (np.pi/6,1)
-    rot_rng = (np.pi/4.5,1)
+    sag_rng = (np.pi/6,np.pi/6,1)
+    cor_rng = (np.pi/6,np.pi/6,1)
+    rot_rng = (np.pi/4.5,np.pi/4.5,1)
 
     exp_period = [5,3,6,3]
     #exp_period = [2,2]
@@ -206,9 +211,20 @@ def ref_display_node():
                 random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
                 soundhandle.playWave(AU_PATH + "/sequence start.wav" ,1)
-                period = [exp_period[0]+exp_period[3],exp_period[1]+exp_period[2]]
-                period_trans=[exp_period[1],exp_period[3]]
-                cr_cl = test_period[3]*ndF
+
+                rospy.set_param('/adq/reference/sequence',str(quaternion.as_float_array(postures)))
+
+                t_s=rospy.get_param(RP_STR_T)
+                t_b=rospy.get_param(RP_BNT_T)
+                t_bs=rospy.get_param(RP_TRAN_BS_T)
+                t_sb=rospy.get_param(RP_TRAN_SB_T)
+                period = [t_bs+t_s,t_sb+t_b]
+                
+                print([quaternion.as_rotation_vector(pos)*180/np.pi for pos in postures])
+                print(period)
+                print(":"*80)
+                period_trans=[t_sb,t_bs]
+                cr_cl = t_bs*ndF
                 
                 
 
@@ -257,7 +273,7 @@ def ref_display_node():
                 rv = quaternion.as_rotation_vector(disp_q)
                 ang_disp=np.linalg.norm(rv)
                 rv/=ang_disp
-                inst_ang_lin=np.linspace(0,ang_disp,Ttrans*ndF)
+                inst_ang_lin=np.linspace(0,ang_disp,int(Ttrans*ndF))
                 #inst_ang_nonlin=((np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)*abs(np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)))+1)/2*ang_disp
                 int_ang=list(inst_ang_lin)
                 

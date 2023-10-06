@@ -10,7 +10,7 @@ import signal
 
 num_msg_recieved= 0
 
-UDP_IP = '192.168.12.20'
+UDP_IP = '192.168.12.41'
 #UDP_IP = '127.0.0.20'
 UDP_PORT = 18403
 q1 = quaternion.quaternion(1,0,0,0)

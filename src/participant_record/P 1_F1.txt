@@ -1,2 +1,0 @@
-Timing_seq: "straight","transitionsb","bent","transitionbs"
-5.0,3.0,6.0,3.0

@@ -27,7 +27,7 @@ def imu_measure_node():
     pub = rospy.Publisher('/Fsen/data', Vector3, queue_size=3)
     FXYZ=Vector3()
 
-    ser = serial.Serial('/dev/ttyUSB1', baudrate=921600, bytesize=8, timeout=None,parity="N",stopbits=1, rtscts=1)
+    ser = serial.Serial('/dev/ttyUSB0', baudrate=921600, bytesize=8, timeout=None,parity="N",stopbits=1, rtscts=1)
     # Set up
     #A2
     ser.write(bytes.fromhex('41'))
@@ -90,8 +90,8 @@ def imu_measure_node():
             FXYZ.x=fxyz[0]
             FXYZ.y=fxyz[1]
             FXYZ.z=fxyz[2]
-            with open(filename+angle+".txt","a") as f:
-                f.write(",".join([str(fr) for fr in fxyz])+"\n")                      
+            #with open(filename+angle+".txt","a") as f:
+            #    f.write(",".join([str(fr) for fr in fxyz])+"\n")                      
             pub.publish(FXYZ)
             FXavg=0
             FYavg=0

@@ -25,8 +25,8 @@
   <!-- Nodes for getting IMUs relative position-->  
   <group ns="adq">
     <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
-    <node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative.py" output="screen"/>
-    <node name="GUI" pkg="IMU_ADQ_pck" type="gui_Fcharact.py" output="screen"/>
+    <node name="imu_rel" pkg="head_gui_adq_pck" type="imu_relative.py" output="screen"/>
+    <node name="GUI" pkg="head_gui_adq_pck" type="gui_Fcharact.py" output="screen"/>
     <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->
   </group> 
         

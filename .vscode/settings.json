@@ -1,4 +1,5 @@
 {
+    "python.terminal.activateEnvironment":true,
     "python.autoComplete.extraPaths": [
         "/opt/ros/noetic/lib/python3/dist-packages"
     ],
@@ -8,4 +9,6 @@
     "stlViewer.showAxes": true,
     "stlViewer.showInfo": true,
     "stlViewer.showBoundingBox": true,
+    "ros.distro": "noetic",
+    "ros.rosSetupScript": "/opt/ros/noetic/setup.bash",
 }

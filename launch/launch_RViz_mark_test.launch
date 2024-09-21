@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-    <arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/quatMark_head.rviz"/>
+    <arg name="rviz_config_file" default="$(find head_gui_adq_pck)/src/visualization/quatMark_head.rviz"/>
    <!--Note Imu 2 must be mounted on the head, Imu 1 on the body-->
   <group ns="imu1">
 
@@ -25,12 +25,12 @@
   <!-- Nodes for getting IMUs relative position-->  
   <group ns="adq">
     <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
-    <node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative_hb.py" output="screen"/>
-    <node name="graph_ref" pkg="IMU_ADQ_pck" type="graph_references.py" output="screen"/>
-    <node name="HMark" pkg="IMU_ADQ_pck" type="HMarker_node.py" output="screen"/>
-    <!--node name="RMark" pkg="IMU_ADQ_pck" type="RefMarker_node.py" output="screen"/-->
+    <node name="imu_rel" pkg="head_gui_adq_pck" type="imu_relative_hb.py" output="screen"/>
+    <node name="graph_ref" pkg="head_gui_adq_pck" type="graph_references.py" output="screen"/>
+    <node name="HMark" pkg="head_gui_adq_pck" type="HMarker_node.py" output="screen"/>
+    <!--node name="RMark" pkg="head_gui_adq_pck" type="RefMarker_node.py" output="screen"/-->
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config_file)"/>
-    <node name="GUI" pkg="IMU_ADQ_pck" type="gui_test.py" output="screen"/>
+    <node name="GUI" pkg="head_gui_adq_pck" type="gui_test.py" output="screen"/>
     <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->
   </group> 
         

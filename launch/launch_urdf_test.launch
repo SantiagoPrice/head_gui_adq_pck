@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <launch>
     
-    <param name="robot_description" textfile="$(find IMU_ADQ_pck)/urdf/human_head_w_ref.urdf"/>
-    <arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/robot_mod_vis.rviz"/>
+    <param name="robot_description" textfile="$(find head_gui_adq_pck)/urdf/human_head_w_ref.urdf"/>
+    <arg name="rviz_config_file" default="$(find head_gui_adq_pck)/src/visualization/robot_mod_vis.rviz"/>
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />

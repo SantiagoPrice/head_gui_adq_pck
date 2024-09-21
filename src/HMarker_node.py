@@ -46,7 +46,7 @@ def imu_measure_node():
         Mark.id=0
 
         Mark.type = Marker.MESH_RESOURCE
-        Mark.mesh_resource="package://IMU_ADQ_pck/urdf/mesh/human-head-simplified.dae"
+        Mark.mesh_resource="package://head_gui_adq_pck/urdf/mesh/human-head-simplified.dae"
 
         Mark.action= Marker.ADD
 
@@ -63,9 +63,9 @@ def imu_measure_node():
         Mark.scale.y = 0.01
         Mark.scale.z = 0.01
         
-        MrkRGBA = [float(c) for c in colors.to_rgba('blue')]
+        MrkRGBA = [float(c) for c in colors.to_rgba('orange')]
         Mark.color=ColorRGBA(*MrkRGBA)
-        Mark.color.a=1
+        Mark.color.a=0.7
         
 
         Mark.lifetime=rospy.Duration()

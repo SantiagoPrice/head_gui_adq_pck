@@ -11,30 +11,33 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QCheckBo
 from visualization_msgs.msg import Marker
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QDoubleValidator  # Import QDoubleValidator
+from datetime import datetime
+import os
 
-N_PART=14
-TRAN_SB_TIME=3
-TRAN_BS_TIME=3
-STR_TIME=5
-BNT_TIME=6
+N_PART=6
+TRAN_SB_TIME=2
+TRAN_BS_TIME=2
+STR_TIME=1
+BNT_TIME=5
 
 q_head_curr=np.zeros(4)
 q_ref_curr=np.zeros(4)
 
 trial_names= ['Practice','Free Part1', 'Free Part2','Low Stiff Part1', 'Low Stiff Part2', 'Medium Stiff Part1', 'Medium Stiff Part2', 'High Stiff Part1', 'High Stiff Part2']
+trial_names= ['Practice','Free Part1', 'Low Stiff Part1',  'Medium Stiff Part1', 'High Stiff Part1']
 abreviations= [tn[0]+tn[-1] for tn in trial_names]
-names_map={}
-[names_map.update({n:sn}) for n , sn in zip(trial_names,abreviations) ]
+trial_abrev={}
+[trial_abrev.update({n:sn}) for n , sn in zip(trial_names,abreviations) ]
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('GUI commands')
-        self.initUI()
         self.record = { "cond": False , "filename": ""}
-        self.rec_fold = "/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/participant_record/"
-        
+        self.rec_fold = "./EMBC/"
+        self.rec_fold = "./I_beam_brace/"
+        self.initUI()
         rospy.init_node('gui_node')  # Initialize the ROS node
 
     def initUI(self):
@@ -47,20 +50,20 @@ class MainWindow(QWidget):
         #layout.addWidget(self.save_checkbox )
 
         name_label = QLabel('Name:')
-        #self.name_entry = QLineEdit()
-        self.name_entry = QComboBox()
+        #self.Pnumber_entry = QLineEdit()
+        self.Pnumber_entry = QComboBox()
         for i in range(N_PART):
-            self.name_entry.addItem('Part {}'.format(i+1))
-        self.name_entry.addItem('Test'.format(i+1))
+            self.Pnumber_entry.addItem('Part {}'.format(i+1))
+        self.Pnumber_entry.addItem('Test'.format(i+1))
         layout.addWidget(name_label)
-        layout.addWidget(self.name_entry)
+        layout.addWidget(self.Pnumber_entry)
 
         language_label = QLabel('Language:')
-        language_combo = QComboBox()
-        language_combo.addItem('English')
-        language_combo.addItem('Japanese')
+        self.language_combo = QComboBox()
+        self.language_combo.addItem('English')
+        self.language_combo.addItem('Japanese')
         layout.addWidget(language_label)
-        layout.addWidget(language_combo)
+        layout.addWidget(self.language_combo)
 
         checkbox_list = QVBoxLayout()
         checkboxes = []
@@ -122,12 +125,8 @@ class MainWindow(QWidget):
             time_edit.returnPressed.connect(lambda tPar=tPar, time_edit=time_edit: self.apply_settings(tPar,time_edit))
             self.form_layout.addRow(QLabel(tLab), time_edit )
         
-
-        # Button for enabling edition
-        # enabling_button=QPushButton()
-        # enabling_button.clicked.connect(self.enabling_settings())
-
-        
+        self.set_language()
+        self.language_combo.currentTextChanged.connect(self.set_language)
 
         # Add the form layout to the settings layout
         self.settings_layout.addLayout(self.form_layout)
@@ -143,10 +142,13 @@ class MainWindow(QWidget):
 
         self.setLayout(layout)
 
+        today_date = datetime.today().strftime('%Y_%m_%d')
+        self.folder_path = os.path.join(self.rec_fold, today_date)
+                    
+        if not os.path.exists(self.folder_path):
+            os.makedirs(self.folder_path)
 
 
-
-        self.joint_state_sub = rospy.Subscriber('/joint_states', JointState, self.joint_state_callback)
         self.usr_mrk_pub = rospy.Subscriber('/adq/adq/Marker/Head', Marker, self.usr_mrk_callback)
         self.ref_mrk_pub= rospy.Subscriber('/adq/adq/Marker/Ref', Marker, self.ref_mrk_callback)
         self.demo_pub = rospy.Publisher('/adq/reference/trial', Bool, queue_size=10)
@@ -180,21 +182,12 @@ class MainWindow(QWidget):
 
         if self.record["cond"]:# and self.save_checkbox.isChecked():
                 fn = self.record["filename"]
-                Pname=self.name_entry.currentText()
+                Pname=self.Pnumber_entry.currentText()
                 P_name_short=Pname[0]+Pname[-2:]
-                print("algo")
-                filename = self.rec_fold + f"{P_name_short}_{fn}_GUI_logger.txt"
+                #print("algo")
+                filename = os.path.join(self.folder_path , f"{P_name_short}_{fn}_GUI_logger.txt")
                 with open(filename, 'a') as file:
                     file.write(','.join(str(comp) for comp in qhr_arr) + '\n')
-
-    def joint_state_callback(self, msg):
-        if self.record["cond"]:# and self.save_checkbox.isChecked():
-                fn = self.record["filename"]
-                filename = self.rec_fold + f"{self.name_entry.currentText()}_{fn}.txt"
-                with open(filename, 'a') as file:
-                    file.write(','.join(str(value) for value in msg.position) + '\n')
-
-
 
     def send_demo_request(self):
         self.demo_pub.publish(True)
@@ -205,9 +198,9 @@ class MainWindow(QWidget):
         self.abort_pub.publish(True)
 
     def send_start_request(self):
-        name = self.name_entry.currentText()
+        name = self.Pnumber_entry.currentText()
         try:
-            selected_checkbox = next(filter(lambda checkbox: checkbox.isChecked(), self.findChildren(QRadioButton)))
+            current_trial = next(filter(lambda checkbox: checkbox.isChecked(), self.findChildren(QRadioButton)))
         except(StopIteration):
             # The iterator was exausted because there is no selected option
             print(colored(":"*80, "red"))
@@ -215,19 +208,21 @@ class MainWindow(QWidget):
             print(colored(":"*80, "red"))
         else:
 
-            if not selected_checkbox.text() == 'Practice':
-                    self.record.update({"cond":True ,"filename": names_map[selected_checkbox.text()]})
+            if not current_trial.text() == 'Practice':
+                              
+                    time_now=datetime.today().strftime('%H_%M_%S')
+                    self.record.update({"cond":True ,"filename": trial_abrev[current_trial.text()]+time_now})
                     times=[self.form_layout.itemAt(i,1).widget() for i in range (4)]
                     cicle_time=np.array([float(t.text()) for t in times]).sum()
                     n_cicles = 8                                                         # The number of cicles is asumed from the reference script
                     trial_time=cicle_time*n_cicles
                     print(f"Trial time: {trial_time}")
-                    QTimer.singleShot(trial_time*1000, self.start_timer_callback)
-                    #QTimer.singleShot(240000, self.start_timer_callback)
+                    QTimer.singleShot(trial_time*1000, self.elapsed_timer_callback)
+                    #QTimer.singleShot(240000, self.elapsed_timer_callback)
                     self.start_pub.publish(True)
             else:   
                     print(":"*80)
-                    print(selected_checkbox.text())
+                    print(current_trial.text())
                     self.demo_pub.publish(True)        
             self.showMinimized()
         
@@ -236,14 +231,14 @@ class MainWindow(QWidget):
         print("orientation was reset")
         self.reset_pub.publish(True)
     
-    def start_timer_callback(self):
+    def elapsed_timer_callback(self):
         #self.record["cond"] = False
-        
+
         fn = self.record["filename"]
-        Pname=self.name_entry.currentText()
+        Pname=self.Pnumber_entry.currentText()
         P_name_short=Pname[0]+Pname[-2:]
 
-        filename = self.rec_fold + f"{P_name_short}_{fn}.txt"
+        filename = os.path.join(self.folder_path , f"{P_name_short}_{fn}.txt")
         with open(filename, 'w') as file:
             file.write('Timing_seq: "straight","transitionsb","bent","transitionbs"'+ '\n')
             time_RosPars = ["/ExpSeq/Time/" + phase for phase in ["straight","transitionsb","bent","transitionbs"]]           
@@ -254,6 +249,7 @@ class MainWindow(QWidget):
             for target in sequ:
                 print(target)
                 file.write(target[1:-1]  + '\n')
+        self.record["cond"]=False
 
         print("Timer end")
         self.setVisible(True)
@@ -283,6 +279,12 @@ class MainWindow(QWidget):
             print(f"Transition Time: {new_time} (ROS parameter [{paramName} updated)")
         else:
             print("Invalid transition time entered.")
+
+    def set_language(self):
+        new_lang=self.language_combo.currentText()
+        rospy.set_param("/ExpSeq/Lang", new_lang)
+        print(f"New Language: {new_lang} (ROS parameter /ExpSeq/Lang updated)")
+
 
 
 

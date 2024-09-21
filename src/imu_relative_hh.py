@@ -20,7 +20,7 @@ from std_msgs.msg import MultiArrayLayout, MultiArrayDimension, Header
 
 from termcolor import colored
 import quaternion
-from scipy.spatial.transform import Rotation as Ro
+#from scipy.spatial.transform import Rotation as Ro
 
 from sound_play.libsoundplay import SoundClient
 
@@ -53,9 +53,6 @@ pos = [0 for i in range(6)]
 ref_ypr = [0,0,0]
 ref_flag = False
 
-AU_PATH = "/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/voice commands"
-audiocommands = [["/forward bending.wav","/backward bending.wav"],["/left rotation.wav","/right rotation.wav"],["/left bending.wav","/right bending.wav"],"/neutral position.wav"]
-audiofile=""
 
 ERR_TOL=np.pi/180*2
 
@@ -104,20 +101,11 @@ def callback_imu3(imu):
 
 def callback_ref(imu):
     #global head_angle
-    global ref_ypr , ref_flag, audiofile
+    global ref_ypr , ref_flag 
     imu_q = np.quaternion(imu.orientation.w, imu.orientation.x, imu.orientation.y, imu.orientation.z)
     #head_angle.position[3:] = yawPitchRoll(imu_q ,ls=True)
     
-    # ref_ypr = yawPitchRoll(imu_q ,ls=True)
-    # mots = [ang != 0 for ang in ref_ypr]
-    # if mots.count(True):
-    #     mot_ind=mots.index(True)
-    #     if ref_ypr[mot_ind] > 0:
-    #         audiofile = AU_PATH + audiocommands[mot_ind][0]
-    #     else:
-    #         audiofile = AU_PATH + audiocommands[mot_ind][1]
-    # else:
-    #     audiofile = AU_PATH + audiocommands[-1]
+
 
     ref_flag = True
     
@@ -246,7 +234,7 @@ def count_msg(event):
 
 
 def imu_measure_node():
-    global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose , ERR_TOL , ref_flag, audiofile#, relative_imu1_q, relative_imu2_q
+    global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose , ERR_TOL , ref_flag
     ########### Starting ROS Node ###########
     rospy.init_node('imu_relative_node', anonymous=True)
     rospy.Timer(rospy.Duration(1), count_msg)
@@ -318,36 +306,10 @@ def imu_measure_node():
         #zerocond = not (np.array(head_angle.position) < 0.5).all()
         
 
-        # if ref_flag:
-        #     ref_flag = False
-        #     soundhandle.playWave(audiofile,1)
-
         pub_h.publish(head_angle)
 
         
-        """
-        avg_disp= (np.array(head_angle.position[:3])-prev_orient).mean() 
-
-        if avg_disp < ERR_TOL:
-
-            if cnt < 5000: cnt+=1 
-            else:        flt_str=True     
-            
-        else:
-            if not flt_str: cnt=0               
-            else:           pb_flag=True
-
-        if pb_flag:
-
-            print(yawPitchRoll(relative_imu1_q))
-            #print(head_angle)
-            pub_h.publish(head_angle)
-            prev_orient = np.array(head_angle.position[:3])
-        else:
-            print("Noice was detected {}".format(errs))
-            errs+=1
-        pb_flag=True
-        """
+ 
         #probe.publish(yawPitchRoll(imu2_relative_imu1_q, lsstd_msgs = True)[0])
         #probe.publish(head_angle.position[0])
         #probe2.publish(head_angle.position[1])

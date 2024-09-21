@@ -14,6 +14,8 @@ import tf
 # import threading
 import random
 
+
+
 from geometry_msgs.msg import Wrench, WrenchStamped, Vector3, PoseStamped, Quaternion, Twist, TwistStamped, Pose2D
 from sensor_msgs.msg import Imu
 from std_msgs.msg import String, Bool, Float32MultiArray, Float32, Int32MultiArray
@@ -30,12 +32,15 @@ RP_TRAN_BS_T="/ExpSeq/Time/transitionbs"
 RP_TRAN_SB_T="/ExpSeq/Time/transitionsb"
 RP_STR_T="/ExpSeq/Time/straight"
 RP_BNT_T="/ExpSeq/Time/bent"
+LANG="/ExpSeq/Lang"
 
 self_check_flag = 1
 initializ_flag = 1
-AU_PATH = "/home/santiago/catkin_ws/src/IMU_ADQ_pck/src/voice commands"
+ROOT= "/home/santiago/catkin_ws/src/head_gui_adq_pck/src/voice commands/"
+
 audiocommands = [["/forward bending.wav","/backward bending.wav"],["/left rotation.wav","/right rotation.wav"],["/left bending.wav","/right bending.wav"],"/neutral position.wav"]
-audiofile=""
+sound_playing=False
+
 
 
 ndF=100  # Node frequency
@@ -74,7 +79,9 @@ def callback_abort(flag):
     print ("flag was toggled")
     abort=flag.data
 
-
+def callback_soundChk(msg):
+    global sound_playing
+    sound_playing=msg.data
 
 
 def yawPitchRoll(q, ls = False):
@@ -139,6 +146,58 @@ def get_qpostures (sag_rng, cor_rng, rot_rng):
     """
 
     pos_lst= [sag_rng+(0,), cor_rng+(1,), rot_rng+(2,)]
+    
+    rVcts = np.zeros([1,3])
+
+    for Mangn , Mangp , nPos , axis in pos_lst:
+    
+        axiss = np.zeros(((nPos+1)*2,3))       
+        angs = np.linspace(-Mangn,Mangp,(nPos+1)*2+1)
+        angs=angs[angs!=0] # This doesnt work for uneven angles
+        axiss[:,axis] = angs
+        print(angs)
+        rVcts = np.append(rVcts, axiss,axis=0)
+    #print(rVcts)
+    return quaternion.from_rotation_vector(rVcts[1:,:])
+
+def get_qpostures_sag (sag_rng):
+    """ Function that returns the quaternion for each precribed posture:
+    Input:
+        .xxx_rng: (max_angn max angp, int_post)
+            . max_angn maximum deflection  angle at the given plane in the negative direction (hiper extension right bending, anticlockwise rotation)
+            . max_angp maximum deflection  angle at the given plane (flexion, left bending, clockwise rotation)
+            . int_post: number of positions between maximum deflection and the straight pose
+    Output:
+        . qposes: quaterion list with each of the prescribed pose 
+    """
+
+    pos_lst= [sag_rng+(0,)]
+    
+    rVcts = np.zeros([1,3])
+
+    for Mangn , Mangp , nPos , axis in pos_lst:
+    
+        axiss = np.zeros(((nPos+1)*2,3))       
+        angs = np.linspace(-Mangn,Mangp,(nPos+1)*2+1)
+        angs=angs[angs!=0] # This doesnt work for uneven angles
+        axiss[:,axis] = angs
+        print(angs)
+        rVcts = np.append(rVcts, axiss,axis=0)
+    #print(rVcts)
+    return quaternion.from_rotation_vector(rVcts[1:,:])
+
+def get_qpostures_sag_rot (sag_rng,rot_rng):
+    """ Function that returns the quaternion for each precribed posture:
+    Input:
+        .xxx_rng: (max_angn max angp, int_post)
+            . max_angn maximum deflection  angle at the given plane in the negative direction (hiper extension right bending, anticlockwise rotation)
+            . max_angp maximum deflection  angle at the given plane (flexion, left bending, clockwise rotation)
+            . int_post: number of positions between maximum deflection and the straight pose
+    Output:
+        . qposes: quaterion list with each of the prescribed pose 
+    """
+    pos_lst= [sag_rng+(0,), rot_rng+(1,)]
+
     rVcts = np.zeros([1,3])
 
     for Mangn , Mangp , nPos , axis in pos_lst:
@@ -154,7 +213,7 @@ def get_qpostures (sag_rng, cor_rng, rot_rng):
 
 def ref_display_node():
     global trig, trial , abort
-    global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose #, relative_imu1_q, relative_imu2_q
+    global self_check_flag, initializ_flag, num_msg_recieved, relative_imu_pose , sound_playing #, relative_imu1_q, relative_imu2_q
     ########### Starting ROS Node ###########
     rospy.init_node('graph_ref_node', anonymous=True)
 
@@ -171,21 +230,25 @@ def ref_display_node():
     rospy.Subscriber('/adq/reference/start', Bool , callback_start, queue_size=1)
     rospy.Subscriber('/adq/reference/trial', Bool , callback_trial, queue_size=1)
     rospy.Subscriber('/adq/reference/abort', Bool , callback_abort, queue_size=1)
+    rospy.Subscriber('/adq/soundsPlyng', Bool, callback_soundChk, queue_size=1)
     
     index=True
 
-    sag_rng = (np.pi/6,np.pi/6,1)
+    sag_rng = (np.pi/12,np.pi/12,0)
     cor_rng = (np.pi/6,np.pi/6,1)
-    rot_rng = (np.pi/4.5,np.pi/4.5,1)
-
+    #rot_rng = (np.pi/4.5,np.pi/4.5,1)
+    rot_rng = (np.pi/12,np.pi/12,0)
     exp_period = [5,3,6,3]
     #exp_period = [2,2]
 
-    repetitions = 1
+    repetitions = 3
     activation = False
+    au_path=ROOT
     pos_l=get_qpostures (sag_rng, rot_rng , cor_rng)
+    pos_l=get_qpostures_sag_rot (sag_rng,rot_rng)
 
-    pos_trial = get_qpostures(sag_rng, rot_rng , cor_rng)
+    pos_trial = get_qpostures(sag_rng, rot_rng , rot_rng)
+    pos_trial=get_qpostures_sag_rot (sag_rng,rot_rng)
     test_period = [2,3,4,3]
     postures= []
 
@@ -210,7 +273,7 @@ def ref_display_node():
                 postures = list(pos_l).copy()*repetitions
                 random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
-                soundhandle.playWave(AU_PATH + "/sequence start.wav" ,1)
+                
 
                 rospy.set_param('/adq/reference/sequence',str(quaternion.as_float_array(postures)))
 
@@ -218,6 +281,10 @@ def ref_display_node():
                 t_b=rospy.get_param(RP_BNT_T)
                 t_bs=rospy.get_param(RP_TRAN_BS_T)
                 t_sb=rospy.get_param(RP_TRAN_SB_T)
+                lang=rospy.get_param(LANG)
+                au_path=ROOT+lang
+                #soundhandle.playWave(au_path + "/sequence start.wav" ,1)
+
                 period = [t_bs+t_s,t_sb+t_b]
                 
                 print([quaternion.as_rotation_vector(pos)*180/np.pi for pos in postures])
@@ -233,9 +300,9 @@ def ref_display_node():
                 activation=False
                 #trigger.publish(Bool(False))
                 postures = list(pos_trial).copy()*repetitions
-                random.shuffle(postures)
+                #random.shuffle(postures)
                 postures.append(quaternion.quaternion(1,0,0,0))
-                soundhandle.playWave(AU_PATH + "/trial start.wav",1)
+                soundhandle.playWave(au_path + "/trial start.wav",1)
                 period = [test_period[0]+test_period[3],test_period[1]+test_period[2]]
                 period_trans=[test_period[1],test_period[3]]
                 cr_cl = test_period[3]*ndF
@@ -259,13 +326,22 @@ def ref_display_node():
                 if mots.count(True):
                     mot_ind=mots.index(True)
                     if ref_ypr[mot_ind] > 0:
-                        audiofile = AU_PATH + audiocommands[mot_ind][0]
+                        audiofile = au_path + audiocommands[mot_ind][0]
                     else:
-                        audiofile = AU_PATH + audiocommands[mot_ind][1]
+                        audiofile = au_path + audiocommands[mot_ind][1]
                 else:
-                    audiofile = AU_PATH + audiocommands[-1]    
+                    audiofile = au_path + audiocommands[-1]    
 
                 soundhandle.playWave(audiofile,1)
+                sound_playing=True
+                #rospy.sleep(1)
+                while sound_playing:
+                    #print("waiting")
+                    pass
+                print("go on")
+                rospy.sleep(1)
+                #soundhandle.playWave("BACKINGUP.ogg")
+                soundhandle.playWave(ROOT+"kit_bell.wav")
 
                 Ttrans= period_trans[activation]
 
@@ -293,7 +369,7 @@ def ref_display_node():
 
         if abort:
             abort=False
-            soundhandle.playWave(AU_PATH + "/the sequence was terminated.wav",1)
+            soundhandle.playWave(au_path + "/the sequence was terminated.wav",1)
             reference = visulaize_imu(quaternion.quaternion(1,0,0,0))
             ref.publish(reference)
             postures = []

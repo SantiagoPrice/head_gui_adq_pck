@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="robot_description" textfile="$(find head_gui_adq_pck)/urdf/human_head_w_ref.urdf"/>
+  <arg name="rviz_config_file" default="$(find head_gui_adq_pck)/src/visualization/robot_mod_vis.rviz"/>
+  <arg name="rviz_config_file2" default="$(find head_gui_adq_pck)/src/visualization/robot_mod_vis2.rviz"/>
+  
+  <!-- Nodes for initializinf 3d model of the human head-->  
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <!--rosparam param="source_list">["/imu_rel/imu2_realtive_imu1/Rstate"]</rosparam-->
+    <param name="rate" value="0"/>  <!-- Important for avoiding head flickering motion-->  
+  </node>
+ 
+
+  <!-- Nodes for getting IMUs relative position-->  
+  <group ns="adq">
+    <node name="mrkrs" pkg="head_gui_adq_pck" type="UDP_node_hb.py" output="screen"/>
+    <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
+    <node name="imu_rel" pkg="head_gui_adq_pck" type="imu_relative_hh.py" output="screen"/>
+    <node name="graph_ref" pkg="head_gui_adq_pck" type="graph_references.py" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config_file)"/>
+    <node pkg="rviz" type="rviz" name="rvizl" args="-d $(arg rviz_config_file2)"/>
+    <node name="GUI" pkg="head_gui_adq_pck" type="gui_test.py" output="screen"/>
+    <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->
+  </group> 
+        
+
+</launch>

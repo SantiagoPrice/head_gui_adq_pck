@@ -319,7 +319,7 @@ def imu_measure_node():
         imu2_realtive = visulaize_imu(relative_imu2_q)
         imu1_initial = visulaize_imu(initial_imu1)
         imu2_initial = visulaize_imu(initial_imu2)
-        imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)
+        #imu2_realtive_imu1 = visulaize_imu(imu2_relative_imu1_q)
 
 
 

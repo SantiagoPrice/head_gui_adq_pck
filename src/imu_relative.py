@@ -26,15 +26,15 @@ imu_eular1 = [0.,0.,0.]
 imu_eular2 = [0.,0.,0.]
 imu_eular3 = [0.,0.,0.]
 
-imu1_q = np.quaternion(0.,0.,0.,0.)
-imu2_q = np.quaternion(0.,0.,0.,0.)
-imu3_q = np.quaternion(0.,0.,0.,0.)
+imu1_q = np.quaternion(1.,0.,0.,0.)
+imu2_q = np.quaternion(1.,0.,0.,0.)
+imu3_q = np.quaternion(1.,0.,0.,0.)
 
-initial_imu1 = np.quaternion(0.,0.,0.,0.)
-initial_imu2 = np.quaternion(0.,0.,0.,0.)
+initial_imu1 = np.quaternion(1.,0.,0.,0.)
+initial_imu2 = np.quaternion(1.,0.,0.,0.)
 
-relative_imu1_q = np.quaternion(0.,0.,0.,0.)
-relative_imu2_q = np.quaternion(0.,0.,0.,0.)
+relative_imu1_q = np.quaternion(1.,0.,0.,0.)
+relative_imu2_q = np.quaternion(1.,0.,0.,0.)
 
 self_check_flag = 1
 initializ_flag = 1
@@ -157,9 +157,13 @@ def self_relative():
     global imu1_q, imu2_q, initial_imu1, initial_imu2 #, relative_imu1_q, relative_imu2_q
     # relative_imu1_q  = imu1_q / initial_imu1
     # relative_imu1_q  = imu1_q * initial_imu1.inverse()
-    relative_imu1_q  = 1/initial_imu1 * imu1_q
-    relative_imu2_q  = 1/initial_imu2 * imu2_q
-    imu2_relative_imu1_q = 1/relative_imu1_q * relative_imu2_q
+    #relative_imu1_q  = 1/initial_imu1 * imu1_q
+    #relative_imu2_q  = 1/initial_imu2 * imu2_q
+    relative_imu1_q  = imu1_q
+    relative_imu2_q  = imu2_q
+
+    imu2_relative_imu1_q = 1/relative_imu2_q*relative_imu1_q 
+    #imu2_relative_imu1_q = 1/relative_imu2_q
 
     # imu2_relative_imu1_e= quaternion.as_rotation_vector(imu2_relative_imu1_q)
     imu2_relative_imu1_e = (Ro.from_quat([imu2_relative_imu1_q.x, imu2_relative_imu1_q.y, imu2_relative_imu1_q.z, imu2_relative_imu1_q.w])).as_euler("zxy", degrees=True)

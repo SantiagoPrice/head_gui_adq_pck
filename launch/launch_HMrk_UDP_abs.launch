@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 
-  <param name="robot_description" textfile="$(find IMU_ADQ_pck)/urdf/human_head_w_ref.urdf"/>
-  <arg name="rviz_config_file" default="$(find IMU_ADQ_pck)/src/visualization/robot_mod_vis.rviz"/>
-  <arg name="rviz_config_file2" default="$(find IMU_ADQ_pck)/src/visualization/robot_mod_vis2.rviz"/>
+  <param name="robot_description" textfile="$(find head_gui_adq_pck)/urdf/human_head_w_ref.urdf"/>
+  <arg name="rviz_config_file" default="$(find head_gui_adq_pck)/src/visualization/robot_mod_vis.rviz"/>
+  <arg name="rviz_config_file2" default="$(find head_gui_adq_pck)/src/visualization/robot_mod_vis2.rviz"/>
   
   <!-- Nodes for initializinf 3d model of the human head-->  
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
@@ -17,13 +17,13 @@
 
   <!-- Nodes for getting IMUs relative position-->  
   <group ns="adq">
-    <node name="mrkrs" pkg="IMU_ADQ_pck" type="UDP_node.py" output="screen"/>
+    <node name="mrkrs" pkg="head_gui_adq_pck" type="UDP_node.py" output="screen"/>
     <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
-    <node name="imu_rel" pkg="IMU_ADQ_pck" type="imu_relative_hh_UDF.py" output="screen"/>
-    <node name="graph_ref" pkg="IMU_ADQ_pck" type="graph_references.py" output="screen"/>
+    <node name="imu_rel" pkg="head_gui_adq_pck" type="imu_relative_hh_UDF.py" output="screen"/>
+    <node name="graph_ref" pkg="head_gui_adq_pck" type="graph_references.py" output="screen"/>
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_config_file)"/>
     <node pkg="rviz" type="rviz" name="rvizl" args="-d $(arg rviz_config_file2)"/>
-    <node name="GUI" pkg="IMU_ADQ_pck" type="gui_test.py" output="screen"/>
+    <node name="GUI" pkg="head_gui_adq_pck" type="gui_test.py" output="screen"/>
     <!--node name = "my_rqt_dashboard" pkg = "rqt_gui" type = "rqt_gui" respawn = "false" output = "screen"/-->
   </group> 
         

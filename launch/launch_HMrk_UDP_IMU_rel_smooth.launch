@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="rviz_config_file" default="$(find head_gui_adq_pck)/src/visualization/quatMark_head.rviz"/>
+   <arg name="rviz_config_file2" default="$(find head_gui_adq_pck)/src/visualization/quatMark_head2.rviz"/>
+  <!--Note Imu 2 must be mounted on the head, Imu 1 on the body-->
+   <group ns="imu1">
+    <node name="ig1_node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+    	<param name="name" value="ig1_node" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:9B:A2:FB" type="str"/>
+	    <param name="imu" value="/ig1_node" type="str"/>  
+   </node> 
+  </group> 
+ 
+  <group ns="imu2">  
+    <node name="cu2node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
+ 	    <param name="name" value="imu2" type="str"/>
+	    <param name="sensor_interface" value="Bluetooth" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:52:C4" type="str"/>
+	    <param name="imu" value="/cu2_imu" type="str"/>   
+    </node> 
+  </group>   
+ 
+
+  <!-- Nodes for getting IMUs relative position-->  
+  <group ns="adq">
+    <node name="mrkrs" pkg="head_gui_adq_pck" type="UDP_node_hb.py" output="screen"/>
+    <!--node name="led" pkg="head_gui_adq_pck" type="led_node.py" output="screen"/-->
+    <node name="sound" pkg="sound_play" type="soundplay_node.py" output="screen"/>
+    <node name="imu_rel" pkg="head_gui_adq_pck" type="imu_relative_hh.py" output="screen"/>
+    <node name="graph_ref" pkg="head_gui_adq_pck" type="graph_references_smooth.py" output="screen"/>
+    <node name="HMark" pkg="head_gui_adq_pck" type="HMarker_node.py" output="screen"/>
+    <node name="RMark" pkg="head_gui_adq_pck" type="RefMarker_node.py" output="screen"/>
+    <!--node name="RMark2" pkg="head_gui_adq_pck" type="RefMarker_rescaled_node.py" output="screen"/-->
+    <node pkg="rviz" type="rviz" name="rvizsag" args="-d $(arg rviz_config_file)"/>
+    <node pkg="rviz" type="rviz" name="rvizlat" args="-d $(arg rviz_config_file2)"/>
+    <node name="GUI" pkg="head_gui_adq_pck" type="gui_test.py" output="screen"/>
+  </group> 
+        
+
+</launch>

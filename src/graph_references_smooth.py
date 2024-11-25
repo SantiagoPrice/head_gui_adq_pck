@@ -37,7 +37,7 @@ LANG="/ExpSeq/Lang"
 self_check_flag = 1
 initializ_flag = 1
 ROOT= "/home/santiago/catkin_ws/src/head_gui_adq_pck/src/voice commands/"
-
+SMOOTH_RESP= False # make it a ROS parameter
 audiocommands = [["/forward bending.wav","/backward bending.wav"],["/left rotation.wav","/right rotation.wav"],["/left bending.wav","/right bending.wav"],"/neutral position.wav"]
 sound_playing=False
 
@@ -226,7 +226,6 @@ def ref_display_node():
     print(colored(":"*80, "green"))
 
     ref = rospy.Publisher('/adq/reference/data', Imu, queue_size=3)
-    #trigger = rospy.Publisher('/reference/start', Bool , queue_size=1)
     rospy.Subscriber('/adq/reference/start', Bool , callback_start, queue_size=1)
     rospy.Subscriber('/adq/reference/trial', Bool , callback_trial, queue_size=1)
     rospy.Subscriber('/adq/reference/abort', Bool , callback_abort, queue_size=1)
@@ -266,15 +265,14 @@ def ref_display_node():
         index= not index
         if len(postures)== 0:
             
-            if trig:
-                trig=False
+            if trig or trial:
+                
                 activation = False
-                #trigger.publish(Bool(False))
                 postures = list(pos_l).copy()*repetitions
-                random.shuffle(postures)
+                if trig:
+                    random.shuffle(postures) #randomize the posture order
                 postures.append(quaternion.quaternion(1,0,0,0))
                 
-
                 rospy.set_param('/adq/reference/sequence',str(quaternion.as_float_array(postures)))
 
                 t_s=rospy.get_param(RP_STR_T)
@@ -292,20 +290,9 @@ def ref_display_node():
                 print(":"*80)
                 period_trans=[t_sb,t_bs]
                 cr_cl = t_bs*ndF
-                
-                
 
-            if trial:
+                trig=False
                 trial=False
-                activation=False
-                #trigger.publish(Bool(False))
-                postures = list(pos_trial).copy()*repetitions
-                #random.shuffle(postures)
-                postures.append(quaternion.quaternion(1,0,0,0))
-                soundhandle.playWave(au_path + "/trial start.wav",1)
-                period = [test_period[0]+test_period[3],test_period[1]+test_period[2]]
-                period_trans=[test_period[1],test_period[3]]
-                cr_cl = test_period[3]*ndF
                 
         else:
 
@@ -334,24 +321,30 @@ def ref_display_node():
 
                 soundhandle.playWave(audiofile,1)
                 sound_playing=True
-                #rospy.sleep(1)
-                while sound_playing:
-                    #print("waiting")
-                    pass
-                print("go on")
-                rospy.sleep(1)
-                #soundhandle.playWave("BACKINGUP.ogg")
-                soundhandle.playWave(ROOT+"kit_bell.wav")
 
                 Ttrans= period_trans[activation]
-
                 disp_q=1/o_reference_q * reference_q
                 rv = quaternion.as_rotation_vector(disp_q)
                 ang_disp=np.linalg.norm(rv)
                 rv/=ang_disp
-                inst_ang_lin=np.linspace(0,ang_disp,int(Ttrans*ndF))
-                #inst_ang_nonlin=((np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)*abs(np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)))+1)/2*ang_disp
-                int_ang=list(inst_ang_lin)
+
+                if SMOOTH_RESP: 
+                    #  generate a set of n intermediate positions of the head that will be sent in the following n messages
+
+                    while sound_playing:
+                        pass         # loop to block further instruction until the audio is played
+                    print("go on")
+                    rospy.sleep(1)   #this might be causing issues with the sequence
+                    #soundhandle.playWave("BACKINGUP.ogg")
+                    soundhandle.playWave(ROOT+"kit_bell.wav")
+
+                    
+                    inst_ang_lin=np.linspace(0,ang_disp,int(Ttrans*ndF))
+                    #inst_ang_nonlin=((np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)*abs(np.sin(inst_ang_lin/ang_disp*np.pi-np.pi/2)))+1)/2*ang_disp
+                    int_ang=list(inst_ang_lin)
+                else:
+                    # send the final position in 1 message
+                    int_ang=[ang_disp]
                 
                 
                 
@@ -366,6 +359,8 @@ def ref_display_node():
                         reference = visulaize_imu(o_reference_q*disp_q)
                        
                         ref.publish(reference)
+                else:
+                    pass  # keep the head position at this iteration 
 
         if abort:
             abort=False

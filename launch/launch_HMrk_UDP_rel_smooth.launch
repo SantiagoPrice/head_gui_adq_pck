@@ -16,6 +16,7 @@
     <node name="graph_ref" pkg="head_gui_adq_pck" type="graph_references_smooth.py" output="screen"/>
     <node name="HMark" pkg="head_gui_adq_pck" type="HMarker_node.py" output="screen"/>
     <node name="RMark" pkg="head_gui_adq_pck" type="RefMarker_node.py" output="screen"/>
+    <node name="Fsen" pkg="head_gui_adq_pck" type="Fsens_node.py" output="screen"/>
     <!--node name="RMark2" pkg="head_gui_adq_pck" type="RefMarker_rescaled_node.py" output="screen"/-->
     <node pkg="rviz" type="rviz" name="rvizsag" args="-d $(arg rviz_config_file)"/>
     <node pkg="rviz" type="rviz" name="rvizlat" args="-d $(arg rviz_config_file2)"/>

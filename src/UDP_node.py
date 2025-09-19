@@ -9,10 +9,10 @@ import signal
 
 num_msg_recieved= 0
 
-UDP_IP = '192.168.12.41'
-#UDP_IP = '127.0.0.20'
+UDP_IP = '192.168.12.21'
+#UDP_IP = '127.0.0.53'
+#UDP_PORT = 53
 UDP_PORT = 18403
-#UDP_PORT = 44082
 sock = socket.socket(socket.AF_INET, # Internet
                       socket.SOCK_DGRAM) # UDP
 sock.bind((UDP_IP, UDP_PORT))

@@ -7,6 +7,7 @@ import signal
 import numpy as np
 import quaternion
 from termcolor import colored
+from geometry_msgs.msg import Vector3
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QPushButton, QRadioButton, QFormLayout , QComboBox , QAction
 from visualization_msgs.msg import Marker
 from PyQt5.QtCore import QTimer, Qt
@@ -17,14 +18,16 @@ import os
 N_PART=6
 TRAN_SB_TIME=2
 TRAN_BS_TIME=2
-STR_TIME=1
+STR_TIME=3
 BNT_TIME=5
 
-q_head_curr=np.zeros(4)
-q_ref_curr=np.zeros(4)
+q_head_curr=np.array([1,0,0,0])
+q_ref_curr=np.array([1,0,0,0])
+FXYZ=Vector3(0,0,0)
 
 trial_names= ['Practice','Free Part1', 'Free Part2','Low Stiff Part1', 'Low Stiff Part2', 'Medium Stiff Part1', 'Medium Stiff Part2', 'High Stiff Part1', 'High Stiff Part2']
 trial_names= ['Practice','Free Part1', 'Low Stiff Part1',  'Medium Stiff Part1', 'High Stiff Part1']
+trial_names= ['Practice','Detached actuator', 'Low Stiffness',  'High Stiffness']
 abreviations= [tn[0]+tn[-1] for tn in trial_names]
 trial_abrev={}
 [trial_abrev.update({n:sn}) for n , sn in zip(trial_names,abreviations) ]
@@ -36,7 +39,7 @@ class MainWindow(QWidget):
         self.setWindowTitle('GUI commands')
         self.record = { "cond": False , "filename": ""}
         self.rec_fold = "./EMBC/"
-        self.rec_fold = "./I_beam_brace/"
+        self.rec_fold = "/home/santiago/PhDrive/DHS_exp2/"
         self.initUI()
         rospy.init_node('gui_node')  # Initialize the ROS node
 
@@ -144,13 +147,18 @@ class MainWindow(QWidget):
 
         today_date = datetime.today().strftime('%Y_%m_%d')
         self.folder_path = os.path.join(self.rec_fold, today_date)
-                    
+
+        print(os.getcwd())
         if not os.path.exists(self.folder_path):
+            print("Folder was created")
             os.makedirs(self.folder_path)
+        else:
+            print("{} already exist".format(self.folder_path))
 
 
         self.usr_mrk_pub = rospy.Subscriber('/adq/adq/Marker/Head', Marker, self.usr_mrk_callback)
         self.ref_mrk_pub= rospy.Subscriber('/adq/adq/Marker/Ref', Marker, self.ref_mrk_callback)
+        self.Frecord = rospy.Subscriber('/Fsen/data', Vector3, self.Fsen_callback)
         self.demo_pub = rospy.Publisher('/adq/reference/trial', Bool, queue_size=10)
         self.abort_pub = rospy.Publisher('/adq/reference/abort', Bool, queue_size=10)
         self.start_pub = rospy.Publisher('/adq/reference/start', Bool, queue_size=10)
@@ -173,21 +181,29 @@ class MainWindow(QWidget):
         q_head_curr=np.array([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z])
 
     def ref_mrk_callback(self, msg):
-        global q_ref_curr,q_head_curr
+        global q_ref_curr,q_head_curr,FXYZ
         q_ref_curr=np.array([msg.pose.orientation.w,msg.pose.orientation.x,msg.pose.orientation.y,msg.pose.orientation.z])
         
 
         
-        qhr_arr= np.append(q_head_curr,q_ref_curr,axis=0)
+        qhr_arr= list(np.append(q_head_curr,q_ref_curr,axis=0))
 
         if self.record["cond"]:# and self.save_checkbox.isChecked():
                 fn = self.record["filename"]
                 Pname=self.Pnumber_entry.currentText()
                 P_name_short=Pname[0]+Pname[-2:]
                 #print("algo")
+
+                F_txt=[f"{fc:.1f}" for fc in [FXYZ.x,FXYZ.y,FXYZ.z]]
+
                 filename = os.path.join(self.folder_path , f"{P_name_short}_{fn}_GUI_logger.txt")
                 with open(filename, 'a') as file:
-                    file.write(','.join(str(comp) for comp in qhr_arr) + '\n')
+                    file.write(','.join(str(comp) for comp in qhr_arr+F_txt) + '\n')
+
+    def Fsen_callback(self, fxyz):
+        global FXYZ
+        FXYZ=fxyz
+        print(FXYZ)
 
     def send_demo_request(self):
         self.demo_pub.publish(True)
@@ -214,7 +230,7 @@ class MainWindow(QWidget):
                     self.record.update({"cond":True ,"filename": trial_abrev[current_trial.text()]+time_now})
                     times=[self.form_layout.itemAt(i,1).widget() for i in range (4)]
                     cicle_time=np.array([float(t.text()) for t in times]).sum()
-                    n_cicles = 8                                                         # The number of cicles is asumed from the reference script
+                    n_cicles = 4                                                         # The number of cicles is asumed from the reference script: Fix this by establishing a ROS parameter in the node imu_relative_hb
                     trial_time=cicle_time*n_cicles
                     print(f"Trial time: {trial_time}")
                     QTimer.singleShot(trial_time*1000, self.elapsed_timer_callback)
@@ -239,6 +255,7 @@ class MainWindow(QWidget):
         P_name_short=Pname[0]+Pname[-2:]
 
         filename = os.path.join(self.folder_path , f"{P_name_short}_{fn}.txt")
+        print(self.folder_path )
         with open(filename, 'w') as file:
             file.write('Timing_seq: "straight","transitionsb","bent","transitionbs"'+ '\n')
             time_RosPars = ["/ExpSeq/Time/" + phase for phase in ["straight","transitionsb","bent","transitionbs"]]           

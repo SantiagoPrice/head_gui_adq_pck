@@ -240,7 +240,7 @@ def ref_display_node():
     exp_period = [5,3,6,3]
     #exp_period = [2,2]
 
-    repetitions = 3
+    repetitions = 1
     activation = False
     au_path=ROOT
     pos_l=get_qpostures (sag_rng, rot_rng , cor_rng)

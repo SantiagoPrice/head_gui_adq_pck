@@ -71,9 +71,13 @@ class MainWindow(QWidget):
         layout.addWidget(self.name_entry)
 
 
-        self.label = QLabel('Joint State Value:')
-        self.label.setFont(QFont('Arial', 28, QFont.Bold))  # Set font size and bold
-        layout.addWidget(self.label)
+        self.labelq = QLabel('Orientation State:')
+        self.labelq.setFont(QFont('Arial', 28, QFont.Bold))  # Set font size and bold
+        layout.addWidget(self.labelq)
+
+        self.labelf = QLabel('Force State:')
+        self.labelf.setFont(QFont('Arial', 28, QFont.Bold))  # Set font size and bold
+        layout.addWidget(self.labelf)
 
         checkbox_list = QVBoxLayout()
         checkboxes = []
@@ -120,7 +124,13 @@ class MainWindow(QWidget):
     def Fsen_callback(self, fxyz):
         global FXYZ
         FXYZ=fxyz
-
+        if self.switch_offset:
+            self.switch_offset=False
+            self.F_offset=[FXYZ.x,FXYZ.y,FXYZ.z]
+        FXYZ_off=[FXYZ.x-self.F_offset[0],FXYZ.y-self.F_offset[1],FXYZ.z-self.F_offset[2]]
+        F3d=np.linalg.norm(np.array(FXYZ_off))
+        self.labelf.setText(f'Resistive Force: F3d {F3d:.1f} Fx {FXYZ_off[0]:.1f} Fy {FXYZ_off[1]:.1f} Fz {FXYZ_off[2]:.1f}')
+        
 
     def IMU_callback(self, q):
         global FXYZ
@@ -129,7 +139,6 @@ class MainWindow(QWidget):
         if self.switch_offset:
             self.offset_imu_pose=1/angles
             self.switch_offset=False
-            self.F_offset=[FXYZ.x,FXYZ.y,FXYZ.z]
         
         q_rv=quaternion.as_rotation_vector(self.offset_imu_pose *angles) 
         q_rv_lst=list(q_rv)
@@ -137,10 +146,10 @@ class MainWindow(QWidget):
         ang3d_disp=False
         if ang3d_disp:
          Ang3d=np.linalg.norm(q_rv)*180/np.pi
-         self.label.setText(f'Joint State Value: 3d ang {Ang3d:.1f} Fx {FXYZ.x-self.F_offset[0]:.1f} Fy {FXYZ.y-self.F_offset[1]:.1f} Fz {FXYZ.z-self.F_offset[2]:.1f}')
+         self.labelq.setText(f'Joint State Value: 3d ang {Ang3d:.1f}')
         else:
          rpy= yawPitchRoll(self.offset_imu_pose * angles, ls = False)
-         self.label.setText(f'Head Posture: p{rpy[0]:.1f} y{rpy[1]:.1f} r{rpy[2]:.1f} Resistive Force: Fx {FXYZ.x-self.F_offset[0]:.1f} Fy {FXYZ.y-self.F_offset[1]:.1f} Fz {FXYZ.z-self.F_offset[2]:.1f}')
+         self.labelq.setText(f'Head Posture: p{rpy[0]:.1f} y{rpy[1]:.1f} r{rpy[2]:.1f}')
         
         
         

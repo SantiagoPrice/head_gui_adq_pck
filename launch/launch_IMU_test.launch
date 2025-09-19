@@ -4,7 +4,7 @@
     <node name="cu2node" pkg="openzen_sensor" type="openzen_sensor_node" output="screen">
  	    <param name="name" value="imu2" type="str"/>
 	    <param name="sensor_interface" value="Bluetooth" type="str"/>
-	    <param name="sensor_name" value="00:04:3E:9B:A2:FB" type="str"/>
+	    <param name="sensor_name" value="00:04:3E:6C:52:C4" type="str"/>
 	    <param name="imu" value="/cu2_imu" type="str"/>   
     </node> 
   </group>   
